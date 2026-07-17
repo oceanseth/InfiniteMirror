@@ -94,8 +94,10 @@ env vars override for offline work (see `orchestrator/config.py`).
   on real Inkling today for pennies while the Akash 8×H200 question waits.
 - **Funding window for `inkling.yml`** — 8×H200 ≈ $12–25/hr; do we want a
   time-boxed demo window on the one matching provider?
-- **GBrain + Pomerium credentials** — client-memory writes and session-scoped
-  access enforcement are stubbed until we have accounts.
+- **GBrain credentials** — client-memory writes are stubbed until we have an
+  account. Pomerium: an API credential is stored in SSM
+  (`/infinitemirror/pomerium/api_key`); next step is putting the Akash
+  inference endpoint behind a Pomerium route with session-scoped policies.
 
 ## License
 
