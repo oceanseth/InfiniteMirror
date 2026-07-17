@@ -82,8 +82,8 @@ def route(registry, transcript):
         for name, a in registry.items()
     )
     raw = chat(ROUTER_PROMPT.format(cards=cards), transcript)
-    start, end = raw.find("{"), raw.rfind("}")
-    return json.loads(raw[start : end + 1])
+    obj, _ = json.JSONDecoder().raw_decode(raw[raw.find("{"):])
+    return obj
 
 
 def run(task):
