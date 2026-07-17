@@ -1,0 +1,65 @@
+version: "2.0"
+services:
+  app:
+    image: vllm/vllm-openai:nightly
+    env:
+      - VLLM_USE_V2_MODEL_RUNNER=1
+      - FLASH_ATTENTION_CUTE_DSL_CACHE_ENABLED=1
+      - HF_HOME=/data/hf
+    command:
+      - vllm
+    args:
+      - serve
+      - thinkingmachines/Inkling-NVFP4
+      - --tokenizer-mode=inkling
+      - --reasoning-parser=inkling
+      - --tool-call-parser=inkling
+      - --enable-auto-tool-choice
+      - --tensor-parallel-size=8
+      - --max-model-len=131072
+      - --kernel-config.enable_flashinfer_autotune=False
+      - --trust-remote-code
+      - --host=0.0.0.0
+      - --port=8000
+    expose:
+      - port: 8000
+        as: 80
+        to:
+          - global: true
+    params:
+      storage:
+        data:
+          mount: /data
+          readOnly: false
+profiles:
+  compute:
+    app:
+      resources:
+        cpu:
+          units: 32
+        memory:
+          size: 512Gi
+        storage:
+          - size: 100Gi
+          - name: data
+            size: 1000Gi
+            attributes:
+              persistent: true
+              class: beta3
+        gpu:
+          units: 8
+          attributes:
+            vendor:
+              nvidia:
+                - model: h200
+  placement:
+    dcloud:
+      pricing:
+        app:
+          denom: uact
+          amount: 100000
+deployment:
+  app:
+    dcloud:
+      profile: app
+      count: 1
