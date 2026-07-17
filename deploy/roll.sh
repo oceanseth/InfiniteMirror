@@ -58,6 +58,20 @@ if "mcp.infinitemirror.masky.ai" not in cfg:
     cfg = cfg.replace("routes:\n", route, 1)
     changed = True
 
+if "dashboard.infinitemirror.masky.ai" not in cfg:
+    route = (
+        "routes:\n"
+        "  - from: https://dashboard.infinitemirror.masky.ai\n"
+        "    to: http://127.0.0.1:3000\n"
+        "    policy:\n"
+        "      - allow:\n"
+        "          or:\n"
+        "            - email:\n"
+        "                is: seth@voicecert.com\n"
+        "    pass_identity_headers: true\n")
+    cfg = cfg.replace("routes:\n", route, 1)
+    changed = True
+
 if changed:
     open(cfg_path, "w").write(cfg)
     print("pomerium config updated")

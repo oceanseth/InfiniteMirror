@@ -131,3 +131,11 @@ resource "aws_route53_record" "mcp" {
   ttl     = 60
   records = [aws_eip.host.public_ip]
 }
+
+resource "aws_route53_record" "wildcard" {
+  zone_id = data.aws_route53_zone.masky.zone_id
+  name    = "*.${var.domain}"
+  type    = "A"
+  ttl     = 60
+  records = [aws_eip.host.public_ip]
+}
