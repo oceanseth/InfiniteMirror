@@ -97,7 +97,25 @@ env vars override for offline work (see `orchestrator/config.py`).
 - **GBrain credentials** — client-memory writes are stubbed until we have an
   account.
 
-## Pomerium demo route (one console step remaining)
+## Hosted deployment: https://infinitemirror.masky.ai
+
+`terraform/` provisions the production host (deployed): EC2 (Amazon Linux
+2023, t3.small) in the masky-gbrain-production VPC with an Elastic IP, a
+Route53 A record on the masky.ai zone, and an instance role that reads the
+`/infinitemirror/*` SSM parameters — no secrets on disk or in the repo. At
+boot the instance clones this repo, starts the dashboard as a systemd
+service, and runs **self-hosted Pomerium Core** (v0.33.0) with autocert
+(Let's Encrypt) and Pomerium's hosted authenticate service — no Zero
+console dependency. The route policy allows `seth@voicecert.com`; identity
+headers flow to the dashboard, so every reasoning request to the Akash
+worker is tied to the login that made it.
+
+```bash
+cd terraform && terraform init && terraform apply     # deploy / update
+aws ssm start-session --target <instance_id>          # debug (no SSH port)
+```
+
+## Local Pomerium Zero route (alternative demo)
 
 Cluster: `needed-moray-8897.pomerium.app` (token + domain in SSM under
 `/infinitemirror/pomerium/`); the Zero connector runs locally in Docker
