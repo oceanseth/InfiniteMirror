@@ -1,7 +1,7 @@
 version: "2.0"
 services:
   app:
-    image: vllm/vllm-openai:nightly
+    image: vllm/vllm-openai:inkling-x86_64-cu129
     env:
       - VLLM_USE_V2_MODEL_RUNNER=1
       - FLASH_ATTENTION_CUTE_DSL_CACHE_ENABLED=1

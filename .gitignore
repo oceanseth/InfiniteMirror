@@ -1,0 +1,4 @@
+.env
+__pycache__/
+lora/sft.jsonl
+lora/dpo.jsonl

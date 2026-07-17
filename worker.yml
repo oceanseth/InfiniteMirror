@@ -1,0 +1,50 @@
+version: "2.0"
+services:
+  app:
+    image: vllm/vllm-openai:vllm-x86_64-cu13-0.25.1-7a33ba9
+    env:
+      # set a real key before deploying: openssl rand -hex 24 (keep it in .env, not git)
+      - VLLM_API_KEY=REPLACE_ME
+    command:
+      - vllm
+    args:
+      - serve
+      - Qwen/Qwen2.5-14B-Instruct
+      - --max-model-len=16384
+      - --enable-auto-tool-choice
+      - --tool-call-parser=hermes
+      - --gpu-memory-utilization=0.92
+      - --host=0.0.0.0
+      - --port=8000
+    expose:
+      - port: 8000
+        as: 80
+        to:
+          - global: true
+profiles:
+  compute:
+    app:
+      resources:
+        cpu:
+          units: 8
+        memory:
+          size: 32Gi
+        storage:
+          size: 120Gi
+        gpu:
+          units: 1
+          attributes:
+            vendor:
+              nvidia:
+                - model: a100
+  placement:
+    dcloud:
+      pricing:
+        app:
+          denom: uact
+          amount: 5000
+deployment:
+  app:
+    dcloud:
+      profile: app
+      count: 1
