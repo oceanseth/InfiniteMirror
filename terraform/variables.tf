@@ -44,3 +44,9 @@ variable "subnet_id" {
   type        = string
   default     = "subnet-094e8acf0792a4d06"
 }
+
+variable "mcp_domain" {
+  description = "FQDN for the Pomerium-gated MCP endpoint"
+  type        = string
+  default     = "mcp.infinitemirror.masky.ai"
+}

@@ -96,6 +96,7 @@ resource "aws_instance" "host" {
 
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
     domain        = var.domain
+    mcp_domain    = var.mcp_domain
     allowed_email = var.allowed_email
     repo_url      = var.repo_url
     region        = var.region
@@ -118,6 +119,14 @@ resource "aws_eip" "host" {
 resource "aws_route53_record" "dashboard" {
   zone_id = data.aws_route53_zone.masky.zone_id
   name    = var.domain
+  type    = "A"
+  ttl     = 60
+  records = [aws_eip.host.public_ip]
+}
+
+resource "aws_route53_record" "mcp" {
+  zone_id = data.aws_route53_zone.masky.zone_id
+  name    = var.mcp_domain
   type    = "A"
   ttl     = 60
   records = [aws_eip.host.public_ip]
