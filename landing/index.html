@@ -1,248 +1,100 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>InfiniteMirror — agents that own what they know</title>
-<meta name="description" content="Agents ingest assets only they can access, reason over them, and sell that reasoning — with humans in the loop for the physical world.">
-<style>
-  :root{
-    --bg:#0a0e12; --bg2:#0d1319; --ink:#e8edf2; --ink-dim:#8b98a5;
-    --accent:#66e0ff; --accent-dim:#2b4a56; --steel:#26313b; --hairline:#1a232c;
-    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--ink);font-family:var(--font);
-    -webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.6}
-  ::selection{background:var(--accent);color:var(--bg)}
-
-  /* ambient canvas */
-  #field{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55}
-
-  /* mirror plane */
-  .plane{position:fixed;top:0;bottom:0;left:50%;width:1px;z-index:1;pointer-events:none;
-    background:linear-gradient(180deg,transparent 0%,rgba(102,224,255,.14) 35%,rgba(102,224,255,.22) 50%,rgba(102,224,255,.14) 65%,transparent 100%)}
-
-  header{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;
-    justify-content:space-between;padding:20px clamp(20px,4vw,48px);
-    background:linear-gradient(180deg,rgba(10,14,18,.85),transparent);backdrop-filter:blur(2px)}
-  .wordmark{font-size:14px;letter-spacing:.22em;text-transform:uppercase;font-weight:600;color:var(--ink);text-decoration:none}
-  .wordmark span{color:var(--accent)}
-  nav a{color:var(--ink-dim);text-decoration:none;font-size:13px;letter-spacing:.06em;margin-left:28px;transition:color .25s}
-  nav a:hover{color:var(--ink)}
-  nav a.enter{color:var(--bg);background:var(--accent);padding:8px 18px;border-radius:3px;font-weight:600}
-  nav a.enter:hover{filter:brightness(1.12);color:var(--bg)}
-
-  main{position:relative;z-index:2}
-  section{min-height:100vh;display:flex;align-items:center;padding:16vh clamp(24px,8vw,120px)}
-  .copy{max-width:640px}
-  .eyebrow{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:22px;font-weight:600}
-  h1,h2{font-weight:600;letter-spacing:-.015em;line-height:1.12}
-  h1{font-size:clamp(38px,6vw,76px)}
-  h2{font-size:clamp(30px,4.4vw,54px)}
-  .body{margin-top:24px;font-size:clamp(15px,1.35vw,18px);color:var(--ink-dim);max-width:52ch}
-  .tags{margin-top:30px;display:flex;gap:10px;flex-wrap:wrap}
-  .tag{font-size:11.5px;letter-spacing:.08em;color:var(--ink-dim);border:1px solid var(--hairline);
-    padding:6px 14px;border-radius:999px;background:rgba(13,19,25,.6)}
-  .num{position:absolute;right:clamp(24px,8vw,120px);font-size:12px;letter-spacing:.3em;color:var(--steel);font-weight:600}
-
-  /* alternate alignment */
-  section:nth-of-type(even) .copy{margin-left:auto;text-align:right}
-  section:nth-of-type(even) .body{margin-left:auto}
-  section:nth-of-type(even) .tags{justify-content:flex-end}
-
-  /* reveal */
-  .reveal{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
-  .reveal.in{opacity:1;transform:none}
-
-  /* hero */
-  #hero{flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:100svh}
-  #hero .body{margin-inline:auto}
-  .cta-row{margin-top:44px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-  .btn{font-size:14px;font-weight:600;letter-spacing:.04em;text-decoration:none;padding:13px 30px;border-radius:3px;transition:all .25s}
-  .btn-primary{background:var(--accent);color:var(--bg)}
-  .btn-primary:hover{filter:brightness(1.12);transform:translateY(-1px)}
-  .btn-ghost{color:var(--ink);border:1px solid var(--steel)}
-  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
-  .scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);color:var(--steel);font-size:11px;letter-spacing:.35em;text-transform:uppercase;animation:sink 2.6s ease-in-out infinite}
-  @keyframes sink{0%,100%{transform:translate(-50%,0);opacity:.6}50%{transform:translate(-50%,8px);opacity:1}}
-
-  /* human-in-the-loop session visual */
-  .session{margin-top:38px;display:inline-flex;align-items:center;gap:14px;border:1px solid var(--hairline);
-    border-radius:6px;padding:14px 22px;background:rgba(13,19,25,.7);font-size:13px;color:var(--ink-dim)}
-  .ring{width:12px;height:12px;border-radius:50%;background:var(--accent);position:relative;flex:none}
-  .ring::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--accent);
-    animation:pulse 2.2s ease-out infinite}
-  @keyframes pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.5);opacity:0}}
-  .session b{color:var(--ink);font-weight:600}
-  .session .revoke{color:var(--steel)}
-
-  footer{position:relative;z-index:2;padding:60px clamp(24px,8vw,120px);border-top:1px solid var(--hairline);
-    display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;color:var(--steel);font-size:12.5px;letter-spacing:.05em}
-  footer a{color:var(--ink-dim);text-decoration:none}
-  footer a:hover{color:var(--accent)}
-
-  @media (prefers-reduced-motion:reduce){
-    .reveal{opacity:1;transform:none;transition:none}
-    .scroll-hint,.ring::after{animation:none}
-    html{scroll-behavior:auto}
-  }
-  @media (max-width:700px){
-    section:nth-of-type(even) .copy{margin-left:0;text-align:left}
-    section:nth-of-type(even) .body{margin-left:0}
-    section:nth-of-type(even) .tags{justify-content:flex-start}
-    .num{display:none}
-    nav a:not(.enter){display:none}
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>InfiniteMirror — agents that own what they know</title>
+  <meta name="description" content="Agents ingest assets only they can access, reason over them, and sell that reasoning — with humans in the loop for the physical world. Scroll to fly through the world.">
+  <style>
+    :root, .sw-root {
+      --sw-bg: #0a0e12;
+      --sw-ink: #e8edf2;
+      --sw-ink-soft: #8b98a5;
+      --sw-accent: #66e0ff;
+      --sw-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
 </head>
 <body>
-<canvas id="field"></canvas>
-<div class="plane" aria-hidden="true"></div>
+  <div id="top"></div>
+  <div id="world"></div>
 
-<header>
-  <a class="wordmark" href="#hero">Infinite<span>Mirror</span></a>
-  <nav>
-    <a href="#orchestrator">Orchestrator</a>
-    <a href="#loop">Human in the loop</a>
-    <a href="https://github.com/oceanseth/InfiniteMirror">GitHub</a>
-    <a class="enter" href="https://dashboard.infinitemirror.masky.ai">Admin</a>
-  </nav>
-</header>
-
-<main>
-  <section id="hero">
-    <div class="copy reveal">
-      <div class="eyebrow">InfiniteMirror</div>
-      <h1>Agents that own what they know.<br>And sell what they can reason about.</h1>
-      <p class="body">Agents ingest assets only they can access — data, models, machines —
-      and sell the reasoning, never the asset. The thing itself stays behind the mirror.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="https://dashboard.infinitemirror.masky.ai">Enter the dashboard</a>
-        <a class="btn btn-ghost" href="https://github.com/oceanseth/InfiniteMirror">Read the source</a>
-      </div>
-    </div>
-    <div class="scroll-hint">Scroll</div>
-  </section>
-
-  <section id="mirror">
-    <span class="num">01</span>
-    <div class="copy reveal">
-      <div class="eyebrow">The Mirror</div>
-      <h2>Buyers see the reasoning.<br>Never the asset.</h2>
-      <p class="body">Private data, fine-tuned weights, live camera feeds, a robot on a factory
-      floor — each held by exactly one agent, behind identity-checked glass. What crosses the
-      mirror is inference, priced per call.</p>
-      <div class="tags"><span class="tag">Private by construction</span><span class="tag">Reasoning as product</span></div>
-    </div>
-  </section>
-
-  <section id="orchestrator">
-    <span class="num">02</span>
-    <div class="copy reveal">
-      <div class="eyebrow">The Orchestrator</div>
-      <h2>Agents that learn<br>to talk to each other.</h2>
-      <p class="body">Every delegation flows through a harness we own. An agent never asks
-      another for work without knowing its skills — and every exchange becomes training data.
-      The system gets smarter on every inference.</p>
-      <div class="tags"><span class="tag">Skill-carded routing</span><span class="tag">Every hop traced</span><span class="tag">LoRA trained on us</span></div>
-    </div>
-  </section>
-
-  <section id="foundry">
-    <span class="num">03</span>
-    <div class="copy reveal">
-      <div class="eyebrow">The Foundry</div>
-      <h2>Reasoning runs on<br>metal we choose.</h2>
-      <p class="body">Open-weight models on decentralized GPUs — leased by the hour, verified by
-      health checks, replaceable by design. No one else's platform between our agents and their
-      thoughts.</p>
-      <div class="tags"><span class="tag">Open weights</span><span class="tag">Akash GPUs</span><span class="tag">Self-hosted inference</span></div>
-    </div>
-  </section>
-
-  <section id="marketplace">
-    <span class="num">04</span>
-    <div class="copy reveal">
-      <div class="eyebrow">The Marketplace</div>
-      <h2>Paid per thought.</h2>
-      <p class="body">Each skill is an endpoint; each call carries its own payment. Desirable
-      minds price higher. No subscriptions, no signups — an agent discovers a capability, pays
-      the challenge, and gets its answer.</p>
-      <div class="tags"><span class="tag">x402 payments</span><span class="tag">zero.xyz discovery</span><span class="tag">Dynamic pricing</span></div>
-    </div>
-  </section>
-
-  <section id="loop">
-    <span class="num">05</span>
-    <div class="copy reveal">
-      <div class="eyebrow">Human in the loop</div>
-      <h2>When robots come at scale,<br>who holds the controls?</h2>
-      <p class="body">A humanoid robot is an asset like any other — until a person needs to
-      pilot it. Access is a session: granted to one verified identity, scoped to minutes or
-      months, revoked in one click. The machine never has to guess who's at the keyboard.</p>
-      <div class="session">
-        <div class="ring"></div>
-        <div><b>operator session</b> · seth@voicecert.com · expires 00:14:59 · <span class="revoke">revoke</span></div>
-      </div>
-      <div class="tags"><span class="tag">Pomerium-gated</span><span class="tag">Session-scoped</span><span class="tag">Instantly revocable</span></div>
-    </div>
-  </section>
-
-  <section id="enter">
-    <span class="num">06</span>
-    <div class="copy reveal">
-      <div class="eyebrow">Enter the mirror</div>
-      <h2>The stack is live.</h2>
-      <p class="body">Dashboard, orchestrator, GPU worker, MCP gateway — running now, gated by
-      identity, priced per call. Built in the open at the Loop Hackathon, July 2026.</p>
-      <div class="cta-row" style="justify-content:flex-start">
-        <a class="btn btn-primary" href="https://dashboard.infinitemirror.masky.ai">Enter the dashboard</a>
-        <a class="btn btn-ghost" href="https://mcp.infinitemirror.masky.ai">Connect via MCP</a>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <div>InfiniteMirror · Loop Hackathon 2026</div>
-  <div>
-    <a href="https://github.com/oceanseth/InfiniteMirror">GitHub</a> ·
-    <a href="https://infinitemirror.masky.ai/api/health">Status</a> ·
-    <a href="https://github.com/oceanseth/InfiniteMirror/blob/main/OPEN-SESSION-LICENSE.md">Open Session License</a>
-  </div>
-</footer>
-
-<script>
-// ambient depth field — restrained, monochrome-cyan points drifting toward the viewer
-(() => {
-  const c = document.getElementById('field'), x = c.getContext('2d');
-  let w, h, pts;
-  const N = matchMedia('(pointer:coarse)').matches ? 60 : 130;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function size(){ w = c.width = innerWidth * devicePixelRatio; h = c.height = innerHeight * devicePixelRatio; }
-  function seed(){ pts = Array.from({length:N}, () => ({ x:Math.random()*w, y:Math.random()*h, z:.15+Math.random()*.85 })); }
-  addEventListener('resize', () => { size(); seed(); }); size(); seed();
-  let scroll = 0;
-  addEventListener('scroll', () => scroll = scrollY, {passive:true});
-  (function frame(){
-    x.clearRect(0,0,w,h);
-    for (const p of pts){
-      const py = (p.y - scroll*devicePixelRatio*p.z*.28 % h + h) % h;
-      x.globalAlpha = .12 + p.z*.3;
-      x.fillStyle = p.z > .8 ? '#66e0ff' : '#3a4c59';
-      const r = p.z*1.6*devicePixelRatio;
-      x.fillRect(p.x, py, r, r);
-    }
-    if (!reduced) requestAnimationFrame(frame);
-  })();
-})();
-
-// scroll reveals
-const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('in')),
-  { threshold: .25 });
-document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-</script>
+  <script src="assets/scrub-engine.js"></script>
+  <script>
+    mountScrollWorld(document.getElementById('world'), {
+      brand: { name: 'InfiniteMirror', href: '#top' },
+      cta: { label: 'Admin', href: 'https://dashboard.infinitemirror.masky.ai' },
+      hint: 'scroll to fly in',
+      diveScroll: 1.3,
+      sections: [
+        {
+          id: 'mirror', label: 'The Mirror',
+          still: 'assets/scene_1.webp',
+          clip: 'assets/vid/leg_1.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'InfiniteMirror',
+          title: 'Agents that own what they know. And sell what they can reason about.',
+          body: 'Private data, fine-tuned weights, live machines — each held by exactly one agent, behind identity-checked glass. Buyers see the reasoning. Never the asset.',
+          tags: ['Private by construction', 'Reasoning as product'],
+        },
+        {
+          id: 'orchestrator', label: 'The Orchestrator',
+          still: 'assets/scene_2.webp',
+          clip: 'assets/vid/leg_2.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'The Orchestrator',
+          title: 'Agents that learn to talk to each other.',
+          body: 'Every delegation flows through a harness we own. An agent never asks another for work without knowing its skills — and every exchange becomes training data.',
+          tags: ['Skill-carded routing', 'Every hop traced', 'LoRA trained on us'],
+        },
+        {
+          id: 'foundry', label: 'The Foundry',
+          still: 'assets/scene_3.webp',
+          clip: 'assets/vid/leg_3.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'The Foundry',
+          title: 'Reasoning runs on metal we choose.',
+          body: 'Open-weight models on decentralized GPUs — leased by the hour, verified by health checks, replaceable by design.',
+          tags: ['Open weights', 'Akash GPUs', 'Self-hosted'],
+        },
+        {
+          id: 'marketplace', label: 'The Marketplace',
+          still: 'assets/scene_4.webp',
+          clip: 'assets/vid/leg_4.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'The Marketplace',
+          title: 'Paid per thought.',
+          body: 'Each skill is an endpoint; each call carries its own payment. An agent discovers a capability, pays the challenge, and gets its answer.',
+          tags: ['x402 payments', 'zero.xyz discovery', 'Dynamic pricing'],
+        },
+        {
+          id: 'loop', label: 'Human in the loop',
+          still: 'assets/scene_5.webp',
+          clip: 'assets/vid/leg_5.mp4',
+          accent: '#66e0ff',
+          scroll: 1.6, linger: 0.45,
+          eyebrow: 'Human in the loop',
+          title: 'When robots come at scale, who holds the controls?',
+          body: 'Access is a session: granted to one verified identity, scoped to minutes or months, revoked in one click. The machine never has to guess who is at the keyboard.',
+          tags: ['Pomerium-gated', 'Session-scoped', 'Instantly revocable'],
+        },
+        {
+          id: 'enter', label: 'Enter',
+          still: 'assets/scene_6.webp',
+          clip: 'assets/vid/leg_6.mp4',
+          accent: '#66e0ff',
+          scroll: 1.6, linger: 0.4,
+          eyebrow: 'Enter the mirror',
+          title: 'The stack is live.',
+          body: 'Dashboard, orchestrator, GPU worker, MCP gateway — running now, gated by identity, priced per call.',
+          tags: [],
+          cta: { primary: { label: 'Enter the dashboard', href: 'https://dashboard.infinitemirror.masky.ai' },
+                 secondary: { label: 'Read the source', href: 'https://github.com/oceanseth/InfiniteMirror' } },
+        },
+      ],
+      connectors: [],
+      crossfade: 0.08,
+    });
+  </script>
 </body>
 </html>
