@@ -70,16 +70,14 @@ routes:
     policy:
       - allow:
           or:
-            - email:
-                is: ${allowed_email}
+${allowed_emails}
     pass_identity_headers: true
   - from: https://dashboard.${domain}
     to: http://127.0.0.1:3000
     policy:
       - allow:
           or:
-            - email:
-                is: ${allowed_email}
+${allowed_emails}
     pass_identity_headers: true
   - from: https://${mcp_domain}
     to: http://127.0.0.1:3001
@@ -89,8 +87,7 @@ routes:
     policy:
       - allow:
           or:
-            - email:
-                is: ${allowed_email}
+${allowed_emails}
     pass_identity_headers: true
 CFG
 chmod 600 /etc/pomerium/config.yaml

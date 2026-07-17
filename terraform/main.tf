@@ -97,7 +97,7 @@ resource "aws_instance" "host" {
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
     domain        = var.domain
     mcp_domain    = var.mcp_domain
-    allowed_email = var.allowed_email
+    allowed_emails = join("\n", [for e in var.allowed_emails : "            - email:\n                is: ${e}"])
     repo_url      = var.repo_url
     region        = var.region
   })

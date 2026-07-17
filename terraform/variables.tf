@@ -16,10 +16,10 @@ variable "domain" {
   default     = "infinitemirror.masky.ai"
 }
 
-variable "allowed_email" {
-  description = "Identity allowed through the Pomerium policy"
-  type        = string
-  default     = "seth@voicecert.com"
+variable "allowed_emails" {
+  description = "Identities allowed through the Pomerium policy"
+  type        = list(string)
+  default     = ["seth@voicecert.com", "seth@snapchallenge.net"]
 }
 
 variable "repo_url" {

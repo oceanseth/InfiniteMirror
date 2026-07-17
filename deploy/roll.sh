@@ -72,6 +72,13 @@ if "dashboard.infinitemirror.masky.ai" not in cfg:
     cfg = cfg.replace("routes:\n", route, 1)
     changed = True
 
+if "seth@snapchallenge.net" not in cfg:
+    single = "            - email:\n                is: seth@voicecert.com"
+    both = (single +
+            "\n            - email:\n                is: seth@snapchallenge.net")
+    cfg = cfg.replace(single, both)
+    changed = True
+
 if changed:
     open(cfg_path, "w").write(cfg)
     print("pomerium config updated")
