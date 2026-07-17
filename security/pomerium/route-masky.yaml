@@ -1,0 +1,38 @@
+# Reference copy of the Pomerium route + policy for the Masky/Nick MCP server.
+#
+# In Pomerium ZERO these are entered in the web console (Routes -> New Route) or applied via
+# the Zero management API — this file is the versioned source of truth for what to configure.
+# In SELF-HOSTED Pomerium this block goes directly in config.yaml under `routes:`.
+#
+# Replace `masky.example.com` with a hostname that resolves to the Pomerium data-plane and has
+# TLS (Pomerium Zero manages certs; self-hosted uses Let's Encrypt on :443). The OAuth 2.1
+# sign-in flow REQUIRES a real public hostname — it will not work against a bare IP.
+
+routes:
+  - from: https://masky.example.com
+    to: http://masky-bridge:8080/mcp        # the scoped bridge (compose service name)
+    name: Masky - Nick (scoped)
+
+    # Mark this as an MCP server route so Pomerium runs the MCP OAuth 2.1 + tool-policy path.
+    mcp:
+      server: {}
+
+    policy:
+      # WHO may reach the server at all. Tighten to your team's identity.
+      allow:
+        and:
+          - domain:
+              is: your-domain.com
+          # - groups: { has: 'team-agents' }   # optional: restrict to a group
+
+      # WHICH tools are callable. Allowlist via deny-not_in so tools/list still works.
+      # Defense in depth: the bridge ALSO enforces this list (and pins the avatar to Nick,
+      # which Pomerium cannot do — it matches tool names, not arguments).
+      deny:
+        and:
+          - mcp_tool:
+              not_in:
+                - start_conversation
+                - inject_turn
+                - avatar_speak
+                - get_avatar_speak
