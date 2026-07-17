@@ -295,3 +295,13 @@ function showToast(message) {
     toast.style.opacity = 0;
   }, 3000);
 }
+
+// InfiniteMirror: Pomerium identity badge — shows who is logged in when the
+// dashboard is reached through the Pomerium-gated route.
+fetch('/api/whoami').then(r => r.json()).then(w => {
+  const badge = document.createElement('div');
+  badge.style.cssText = 'position:fixed;top:10px;right:14px;z-index:999;padding:6px 12px;border-radius:16px;font:600 12px system-ui;background:' + (w.gated ? '#123c22;color:#4ade80;border:1px solid #4ade80' : '#3c2a12;color:#fbbf24;border:1px solid #fbbf24');
+  badge.textContent = w.gated ? '\u{1F510} ' + w.email : '\u{1F513} ungated (local dev)';
+  badge.title = w.gated ? 'Authenticated via Pomerium' : 'Direct access — put this behind the Pomerium route to gate it';
+  document.body.appendChild(badge);
+});
