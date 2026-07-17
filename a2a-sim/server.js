@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 // trusting the claim header — required before exposing beyond localhost.
 const identityOf = (req) => req.headers['x-pomerium-claim-email'] || null;
 app.use((req, res, next) => {
-  if (process.env.ALLOW_UNGATED === '1' || req.path === '/api/whoami' || identityOf(req)) {
+  if (process.env.ALLOW_UNGATED === '1' || req.path === '/api/whoami' || req.path === '/api/health' || identityOf(req)) {
     return next();
   }
   res.status(401).send(
@@ -300,6 +300,39 @@ app.get('/api/pricing-config', (req, res) => {
 app.post('/api/pricing-config', (req, res) => {
   pricingConfig = { ...pricingConfig, ...req.body };
   res.json({ success: true, config: pricingConfig });
+});
+
+// API: Deep health — dashboard up + Akash worker reachable. Public (exempt
+// from the identity gate and exposed via an unauthenticated Pomerium route)
+// so uptime monitors can watch the whole chain. Worker probe cached 30s.
+let healthCache = { at: 0, worker: null };
+app.get('/api/health', async (req, res) => {
+  const now = Date.now();
+  if (now - healthCache.at > 30000) {
+    let worker = { configured: !!(workerCfg.baseUrl && workerCfg.apiKey), reachable: false };
+    if (worker.configured) {
+      const t0 = Date.now();
+      try {
+        const r = await fetch(`${workerCfg.baseUrl}/models`, {
+          headers: { Authorization: `Bearer ${workerCfg.apiKey}` },
+          signal: AbortSignal.timeout(8000)
+        });
+        worker.reachable = r.ok;
+        worker.latencyMs = Date.now() - t0;
+        worker.model = workerCfg.model;
+      } catch (e) {
+        worker.error = e.name === 'TimeoutError' ? 'timeout' : e.message;
+      }
+    }
+    healthCache = { at: now, worker };
+  }
+  const ok = healthCache.worker.reachable;
+  res.status(ok ? 200 : 503).json({
+    ok,
+    service: 'infinitemirror-dashboard',
+    uptimeSec: Math.floor(process.uptime()),
+    worker: healthCache.worker
+  });
 });
 
 // API: Who is the Pomerium-authenticated user? (headers set by the proxy)
