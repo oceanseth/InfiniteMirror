@@ -68,19 +68,28 @@ bootstraps.
 
 ```bash
 pip install -r orchestrator/requirements.txt
-export ORCH_BASE_URL=<akash endpoint>/v1   # printed by console-axi deployment status
-export ORCH_API_KEY=<vllm api key>          # VLLM_API_KEY from worker.yml
-export ORCH_MODEL=Qwen/Qwen2.5-14B-Instruct
-python orchestrator/orchestrator.py "your task"
-python orchestrator/evals.py                # score traces, mint LoRA data
+python orchestrator/orchestrator.py "your task"   # config auto-resolves from AWS SSM
+python orchestrator/evals.py                      # score traces, mint LoRA data
 ```
+
+Secrets live in **AWS SSM Parameter Store** under `/infinitemirror/worker/`
+(`base_url`, `api_key` as SecureString, `model`, `akash_dseq`) — no keys in
+the repo or on disk. Anyone with AWS credentials for the account runs the
+orchestrator with zero setup; `ORCH_BASE_URL` / `ORCH_API_KEY` / `ORCH_MODEL`
+env vars override for offline work (see `orchestrator/config.py`).
 
 ## Open questions (help wanted)
 
 - **Tinker access** — do we have an API key / off-waitlist account? The
   comms-LoRA on actual Inkling depends on it.
-- **zero.xyz listing** — what's the API/manifest for listing an agent's
-  reasoning-for-sale? Skill cards should double as the listing schema.
+- **zero.xyz** — the [skill doc](https://www.zero.xyz/skill.md) covers the
+  *consumer* loop (`zero search → get → fetch → review`, automatic x402/MPP
+  payment, `--max-pay` caps): that's how our agents will *buy* external
+  capabilities mid-orchestration. Still open: the *seller* side — how an
+  InfiniteMirror agent lists its reasoning as an x402 capability so it gets
+  indexed by Zero search. Skill cards should double as that listing schema.
+  (`zero` CLI isn't installed on this machine yet: `npm i -g @zeroxyz/cli`
+  then `zero auth login` — device flow needs a human.)
 - **Hosted Inkling key** (Together/Fireworks/Baseten) — lets the router run
   on real Inkling today for pennies while the Akash 8×H200 question waits.
 - **Funding window for `inkling.yml`** — 8×H200 ≈ $12–25/hr; do we want a

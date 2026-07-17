@@ -6,15 +6,12 @@ whose card lists that skill. Every inter-agent message — including rejected
 routing attempts — is appended to traces/<date>.jsonl. Those traces are the
 training corpus for the communication LoRA (see lora/README.md).
 
-Usage:
-  export ORCH_BASE_URL=http://<endpoint>/v1
-  export ORCH_API_KEY=<key>
-  export ORCH_MODEL=Qwen/Qwen2.5-14B-Instruct
-  python orchestrator.py "your task here"
+Config resolves from env (ORCH_BASE_URL / ORCH_API_KEY / ORCH_MODEL) first,
+then AWS SSM under /infinitemirror/worker/ — see config.py. With SSM
+populated, just run:  python orchestrator.py "your task here"
 """
 
 import json
-import os
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -23,15 +20,15 @@ from pathlib import Path
 import yaml
 from openai import OpenAI
 
+from config import load as load_config
+
 ROOT = Path(__file__).parent
 TRACES = ROOT / "traces"
 MAX_HOPS = 6
 
-client = OpenAI(
-    base_url=os.environ.get("ORCH_BASE_URL", "http://localhost:8000/v1"),
-    api_key=os.environ.get("ORCH_API_KEY", "none"),
-)
-MODEL = os.environ.get("ORCH_MODEL", "Qwen/Qwen2.5-14B-Instruct")
+_cfg = load_config()
+client = OpenAI(base_url=_cfg["ORCH_BASE_URL"], api_key=_cfg["ORCH_API_KEY"])
+MODEL = _cfg["ORCH_MODEL"]
 
 
 def load_registry():
