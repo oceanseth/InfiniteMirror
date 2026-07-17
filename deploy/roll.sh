@@ -58,6 +58,13 @@ if "mcp.infinitemirror.masky.ai" not in cfg:
     cfg = cfg.replace("routes:\n", route, 1)
     changed = True
 
+if "jwt_claims_headers" not in cfg:
+    cfg = cfg.replace(
+        "authenticate_service_url: https://authenticate.pomerium.app",
+        "authenticate_service_url: https://authenticate.pomerium.app\njwt_claims_headers:\n  X-Pomerium-Claim-Email: email",
+        1)
+    changed = True
+
 if "dashboard.infinitemirror.masky.ai" not in cfg:
     route = (
         "routes:\n"

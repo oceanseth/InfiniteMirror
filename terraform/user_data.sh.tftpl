@@ -54,6 +54,8 @@ cat > /etc/pomerium/config.yaml <<CFG
 address: :443
 http_redirect_addr: :80
 authenticate_service_url: https://authenticate.pomerium.app
+jwt_claims_headers:
+  X-Pomerium-Claim-Email: email
 runtime_flags:
   mcp: true
 autocert: true
