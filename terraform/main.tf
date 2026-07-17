@@ -107,6 +107,12 @@ resource "aws_instance" "host" {
     volume_type = "gp3"
   }
 
+  # user_data edits roll out live via deploy/roll.sh; only replacements
+  # consume the template, so don't bounce the instance on template changes.
+  lifecycle {
+    ignore_changes = [user_data]
+  }
+
   tags = { Name = "infinitemirror-host" }
 }
 
