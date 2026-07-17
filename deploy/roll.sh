@@ -79,6 +79,14 @@ if "seth@snapchallenge.net" not in cfg:
     cfg = cfg.replace(single, both)
     changed = True
 
+if "shah.raj.s@gmail.com" not in cfg:
+    anchor = "            - email:\n                is: seth@snapchallenge.net"
+    more = (anchor +
+            "\n            - email:\n                is: shah.raj.s@gmail.com" +
+            "\n            - email:\n                is: rajvi.m7@gmail.com")
+    cfg = cfg.replace(anchor, more)
+    changed = True
+
 if changed:
     open(cfg_path, "w").write(cfg)
     print("pomerium config updated")

@@ -19,7 +19,7 @@ variable "domain" {
 variable "allowed_emails" {
   description = "Identities allowed through the Pomerium policy"
   type        = list(string)
-  default     = ["seth@voicecert.com", "seth@snapchallenge.net"]
+  default     = ["seth@voicecert.com", "seth@snapchallenge.net", "shah.raj.s@gmail.com", "rajvi.m7@gmail.com"]
 }
 
 variable "repo_url" {
