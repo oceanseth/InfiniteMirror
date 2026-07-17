@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero • Hello World</title>
+  <meta name="description" content="A visually stunning Hello World site hosted for free on Zero.">
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Reset and Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    :root {
+      --bg-primary: #05050a;
+      --bg-card: rgba(10, 11, 20, 0.45);
+      --border-color: rgba(255, 255, 255, 0.07);
+      --border-hover: rgba(99, 102, 241, 0.3);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --accent-indigo: #6366f1;
+      --accent-violet: #8b5cf6;
+      --accent-cyan: #06b6d4;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient Background Glows */
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.45;
+    }
+    
+    .glow-orb-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--accent-indigo) 0%, rgba(99, 102, 241, 0) 70%);
+      top: -10%;
+      left: -10%;
+      animation: float-slow 15s infinite alternate ease-in-out;
+    }
+    
+    .glow-orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--accent-violet) 0%, rgba(139, 92, 246, 0) 70%);
+      bottom: -15%;
+      right: -10%;
+      animation: float-slow 18s infinite alternate-reverse ease-in-out;
+    }
+    
+    .glow-orb-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, var(--accent-cyan) 0%, rgba(6, 182, 212, 0) 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse-slow 10s infinite ease-in-out;
+    }
+
+    @keyframes float-slow {
+      0% { transform: translateY(0px) scale(1); }
+      100% { transform: translateY(40px) scale(1.1); }
+    }
+    
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.55; transform: translate(-50%, -50%) scale(1.15); }
+    }
+
+    /* Interactive Glassmorphic Card */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+      box-shadow: 
+        0 4px 30px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.3s ease;
+    }
+    
+    .card:hover {
+      border-color: var(--border-hover);
+      box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(99, 102, 241, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      transform: translateY(-4px);
+    }
+    
+    /* Live Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 100px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #a5b4fc;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-cyan);
+      border-radius: 50%;
+      position: relative;
+    }
+    
+    .status-dot::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: var(--accent-cyan);
+      animation: ripple 1.6s infinite ease-out;
+    }
+    
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(3.5); opacity: 0; }
+    }
+
+    /* Typography */
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 70%, var(--accent-indigo) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+      font-weight: 300;
+    }
+
+    /* Profile Wallet display */
+    .wallet-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .wallet-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
+
+    .wallet-address {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: color 0.2s ease;
+    }
+
+    .wallet-address:hover {
+      color: var(--accent-cyan);
+    }
+
+    .wallet-address svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+    
+    /* Interactive Button Group */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-indigo), var(--accent-violet));
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Toast Notification for Clipboard Copy */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(10, 11, 20, 0.9);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 100px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Footer Credits */
+    footer {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.25);
+      letter-spacing: 0.05em;
+      z-index: 10;
+      text-align: center;
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    footer a:hover {
+      color: var(--accent-cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Orbs -->
+  <div class="glow-orb glow-orb-1"></div>
+  <div class="glow-orb glow-orb-2"></div>
+  <div class="glow-orb glow-orb-3"></div>
+
+  <!-- Main Card -->
+  <div class="card">
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span id="time-greeting">Hello, World!</span>
+    </div>
+    
+    <h1>Hello, World.</h1>
+    <p class="subtitle">This elegant webpage was built by Antigravity and is deployed instantly to the edge using the ZeroClick platform.</p>
+    
+    <!-- Wallet box -->
+    <div class="wallet-box">
+      <span class="wallet-label">Connected Zero Wallet</span>
+      <div class="wallet-address" onclick="copyWalletAddress()" title="Click to copy address">
+        <span id="wallet-text">0x3dEF...0FD6</span>
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      </div>
+    </div>
+    
+    <!-- Button group -->
+    <div class="btn-group">
+      <a class="btn btn-primary" href="https://zero.xyz" target="_blank">
+        Explore Zero
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      </a>
+      <button class="btn btn-secondary" onclick="triggerInteractiveGreeting()">
+        Interact
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+    <span>Wallet address copied!</span>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Powered by <a href="https://zero.xyz" target="_blank">Zero</a> &amp; Antigravity Agent
+  </footer>
+
+  <script>
+    const fullWalletAddress = "0x3dEF78C89327eB05531Daedb4eC3Dd5287F10FD6";
+
+    // Set time-based greeting dynamically
+    function getGreeting() {
+      const hrs = new Date().getHours();
+      if (hrs < 12) return "Good Morning • Live on Zero";
+      if (hrs < 18) return "Good Afternoon • Live on Zero";
+      return "Good Evening • Live on Zero";
+    }
+    
+    document.getElementById('time-greeting').innerText = getGreeting();
+
+    // Clipboard Copy
+    function copyWalletAddress() {
+      navigator.clipboard.writeText(fullWalletAddress).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2500);
+      });
+    }
+
+    // Interactive button demo
+    let interactCount = 0;
+    const greetings = [
+      "Welcome to the future of AI Agent hosting!",
+      "Zero makes hosting free and instant.",
+      "Hello again, traveler of the digital space!",
+      "You clicked it! The interface is fully alive.",
+      "Antigravity + Zero = Infinite Possibilities ✨"
+    ];
+
+    function triggerInteractiveGreeting() {
+      interactCount++;
+      const textElement = document.querySelector('.subtitle');
+      textElement.style.opacity = 0;
+      
+      setTimeout(() => {
+        textElement.innerText = greetings[(interactCount - 1) % greetings.length];
+        textElement.style.opacity = 1;
+        textElement.style.transition = "opacity 0.3s ease";
+      }, 200);
+    }
+  </script>
+</body>
+</html>

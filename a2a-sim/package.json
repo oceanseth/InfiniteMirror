@@ -1,0 +1,14 @@
+{
+  "name": "a2a-sim",
+  "version": "1.0.0",
+  "description": "Agent-to-Agent Digital Twin Simulation with HTTP 402 Dynamic Pricing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.3"
+  }
+}
