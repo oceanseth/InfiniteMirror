@@ -95,9 +95,13 @@ env vars override for offline work (see `orchestrator/config.py`).
 - **Funding window for `inkling.yml`** — 8×H200 ≈ $12–25/hr; do we want a
   time-boxed demo window on the one matching provider?
 - **GBrain credentials** — client-memory writes are stubbed until we have an
-  account. Pomerium: an API credential is stored in SSM
-  (`/infinitemirror/pomerium/api_key`); next step is putting the Akash
-  inference endpoint behind a Pomerium route with session-scoped policies.
+  account. Pomerium: credentials are in SSM (`/infinitemirror/pomerium/
+  api_key` and `cluster_token`), and a Pomerium Zero connector runs in
+  Docker (`pomerium-connector`, pomerium/pomerium:v0.33.0, port 443). Next
+  step in the [Zero console](https://console.pomerium.app): add a route with
+  the Akash vLLM endpoint as upstream, inject the worker api_key via a
+  set-request-header so clients authenticate through Pomerium SSO and never
+  hold the model key — session-scoped, revocable access to a live GPU asset.
 
 ## License
 
