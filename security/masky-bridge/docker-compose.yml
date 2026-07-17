@@ -1,0 +1,37 @@
+# Local/self-hosted stack: the scoped Masky bridge + a Pomerium Zero data-plane in front.
+#
+#   agent -> pomerium:443 (auth + per-tool policy) -> masky-bridge:8080/mcp -> masky (stdio)
+#
+# The bridge is NOT published to the host — only Pomerium is reachable from outside the
+# compose network. Routes/policies for Pomerium are managed in the Zero console; point the
+# route's `to:` at  http://masky-bridge:8080/mcp  (see ../pomerium/route-masky.yaml).
+#
+# Secrets are read from the repo-root .env (gitignored): MASKY_API_KEY + POMERIUM_ZERO_TOKEN.
+#   docker compose up --build
+
+services:
+  masky-bridge:
+    build: .
+    env_file: ../../.env        # MASKY_API_KEY
+    environment:
+      BRIDGE_HOST: 0.0.0.0      # reachable by the pomerium container on the compose network
+      BRIDGE_PORT: 8080
+    expose:
+      - "8080"                  # internal-only: no host port mapping
+    restart: unless-stopped
+
+  pomerium:
+    image: pomerium/pomerium:latest   # if MCP route features error, pin :main (MCP shipped there first)
+    env_file: ../../.env        # POMERIUM_ZERO_TOKEN (cluster connection token from the console)
+    environment:
+      XDG_CACHE_HOME: /var/cache
+    ports:
+      - "443:443"
+    volumes:
+      - pomerium-cache:/var/cache
+    depends_on:
+      - masky-bridge
+    restart: unless-stopped
+
+volumes:
+  pomerium-cache:

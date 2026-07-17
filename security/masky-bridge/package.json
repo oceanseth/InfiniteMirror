@@ -1,0 +1,14 @@
+{
+  "name": "masky-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "stdio->HTTP MCP bridge that scopes masky-mcp-server to a single avatar (Nick) with a tool allowlist. Sits behind Pomerium.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  }
+}
