@@ -305,3 +305,59 @@ fetch('/api/whoami').then(r => r.json()).then(w => {
   badge.title = w.gated ? 'Authenticated via Pomerium' : 'Direct access — put this behind the Pomerium route to gate it';
   document.body.appendChild(badge);
 });
+
+// InfiniteMirror: Orchestrator chat pane
+(() => {
+  const messages = document.getElementById('orch-messages');
+  const form = document.getElementById('orch-form');
+  const input = document.getElementById('orch-input');
+  const send = document.getElementById('orch-send');
+  if (!form) return;
+
+  const add = (cls, text) => {
+    const el = document.createElement('div');
+    el.className = 'orch-msg ' + cls;
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const task = input.value.trim();
+    if (!task) return;
+    input.value = '';
+    send.disabled = true;
+    add('orch-msg-user', task);
+    const pending = add('orch-msg-pending', 'Routing across agents on the Akash worker…');
+    try {
+      const res = await fetch('/api/orchestrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task })
+      });
+      const data = await res.json();
+      pending.remove();
+      if (!res.ok) { add('orch-msg-system', '⚠ ' + (data.error || 'orchestrator error')); return; }
+      if (data.hops && data.hops.length) {
+        const hops = document.createElement('div');
+        hops.className = 'orch-hops';
+        data.hops.forEach(h => {
+          const chip = document.createElement('span');
+          chip.className = 'orch-hop' + (h.skill_match ? '' : ' orch-hop-violation');
+          chip.textContent = `${h.agent} · ${h.skill}` + (h.skill_match ? '' : ' ✗');
+          chip.title = h.message;
+          hops.appendChild(chip);
+        });
+        messages.appendChild(hops);
+      }
+      add('orch-msg-answer', data.answer);
+    } catch (err) {
+      pending.textContent = '⚠ ' + err.message;
+    } finally {
+      send.disabled = false;
+      messages.scrollTop = messages.scrollHeight;
+    }
+  });
+})();

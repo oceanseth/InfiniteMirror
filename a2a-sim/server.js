@@ -8,6 +8,25 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// InfiniteMirror: login-first. Identity arrives from the Pomerium proxy as
+// x-pomerium-claim-email. Everything except /api/whoami requires it unless
+// ALLOW_UNGATED=1 (local dev without the proxy in front).
+// TODO: verify X-Pomerium-Jwt-Assertion against the cluster JWKS instead of
+// trusting the claim header — required before exposing beyond localhost.
+const identityOf = (req) => req.headers['x-pomerium-claim-email'] || null;
+app.use((req, res, next) => {
+  if (process.env.ALLOW_UNGATED === '1' || req.path === '/api/whoami' || identityOf(req)) {
+    return next();
+  }
+  res.status(401).send(
+    '<body style="background:#0b0f14;color:#e2e8f0;font:16px system-ui;display:grid;place-items:center;height:95vh">' +
+    '<div style="text-align:center"><h1>&#128272; InfiniteMirror</h1>' +
+    '<p>This dashboard is gated by Pomerium. Sign in through the cluster route<br>' +
+    '(e.g. <code>https://dashboard.&lt;cluster&gt;.pomerium.app</code>) — direct access carries no identity.</p>' +
+    '<p style="color:#64748b">Local dev bypass: <code>ALLOW_UNGATED=1 node server.js</code></p></div></body>');
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // In-Memory Database for Developer Dashboard
@@ -285,8 +304,35 @@ app.post('/api/pricing-config', (req, res) => {
 
 // API: Who is the Pomerium-authenticated user? (headers set by the proxy)
 app.get('/api/whoami', (req, res) => {
-  const email = req.headers['x-pomerium-claim-email'] || null;
+  const email = identityOf(req);
   res.json({ email, gated: !!email });
+});
+
+// API: Chat with the orchestrator harness. Each request runs the skill-aware
+// routing loop against the Akash worker; the reply includes every hop so the
+// UI can show which agent handled which skill. Identity is stamped into the
+// trace, tying reasoning requests to the Pomerium login that made them.
+const { execFile } = require('child_process');
+const REPO_ROOT = path.join(__dirname, '..');
+const PYTHON = path.join(REPO_ROOT, '.venv', 'bin', 'python');
+app.post('/api/orchestrate', (req, res) => {
+  const task = (req.body.task || '').trim();
+  if (!task) return res.status(400).json({ error: 'task is required' });
+  const identity = identityOf(req) || 'ungated-local';
+  execFile(PYTHON, [path.join(REPO_ROOT, 'orchestrator', 'orchestrator.py'), '--json', task],
+    { timeout: 180000, maxBuffer: 4 * 1024 * 1024 },
+    (err, stdout, stderr) => {
+      if (err) {
+        console.error('orchestrate failed:', stderr || err.message);
+        return res.status(502).json({ error: 'orchestrator failed', detail: (stderr || err.message).slice(-400) });
+      }
+      try {
+        const result = JSON.parse(stdout.trim().split('\n').pop());
+        res.json({ identity, ...result });
+      } catch (e) {
+        res.status(502).json({ error: 'bad orchestrator output', detail: stdout.slice(-400) });
+      }
+    });
 });
 
 // API: Simulate Digital Twin Dialogue with HTTP 402 Dynamic Pricing Gating

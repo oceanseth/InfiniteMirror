@@ -711,3 +711,16 @@ body {
   0% { opacity: 0.6; }
   100% { opacity: 1; }
 }
+
+/* InfiniteMirror: Orchestrator chat pane */
+.orch-messages { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; }
+.orch-msg { padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; line-height: 1.45; white-space: pre-wrap; }
+.orch-msg-system { color: #94a3b8; font-style: italic; background: rgba(148,163,184,0.08); }
+.orch-msg-user { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.35); align-self: flex-end; max-width: 85%; }
+.orch-msg-answer { background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.30); align-self: flex-start; max-width: 92%; }
+.orch-msg-pending { color: #94a3b8; font-style: italic; }
+.orch-hops { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0; }
+.orch-hop { font-size: 0.72rem; padding: 3px 9px; border-radius: 12px; background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.4); color: #c4b5fd; }
+.orch-hop.orch-hop-violation { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.5); color: #fca5a5; }
+.orch-form { display: flex; gap: 8px; padding: 0 14px 14px; }
+.orch-form input { flex: 1; }
