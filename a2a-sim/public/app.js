@@ -295,3 +295,69 @@ function showToast(message) {
     toast.style.opacity = 0;
   }, 3000);
 }
+
+// InfiniteMirror: Pomerium identity badge — shows who is logged in when the
+// dashboard is reached through the Pomerium-gated route.
+fetch('/api/whoami').then(r => r.json()).then(w => {
+  const badge = document.createElement('div');
+  badge.style.cssText = 'position:fixed;top:10px;right:14px;z-index:999;padding:6px 12px;border-radius:16px;font:600 12px system-ui;background:' + (w.gated ? '#123c22;color:#4ade80;border:1px solid #4ade80' : '#3c2a12;color:#fbbf24;border:1px solid #fbbf24');
+  badge.textContent = w.gated ? '\u{1F510} ' + w.email : '\u{1F513} ungated (local dev)';
+  badge.title = w.gated ? 'Authenticated via Pomerium' : 'Direct access — put this behind the Pomerium route to gate it';
+  document.body.appendChild(badge);
+});
+
+// InfiniteMirror: Orchestrator chat pane
+(() => {
+  const messages = document.getElementById('orch-messages');
+  const form = document.getElementById('orch-form');
+  const input = document.getElementById('orch-input');
+  const send = document.getElementById('orch-send');
+  if (!form) return;
+
+  const add = (cls, text) => {
+    const el = document.createElement('div');
+    el.className = 'orch-msg ' + cls;
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const task = input.value.trim();
+    if (!task) return;
+    input.value = '';
+    send.disabled = true;
+    add('orch-msg-user', task);
+    const pending = add('orch-msg-pending', 'Routing across agents on the Akash worker…');
+    try {
+      const res = await fetch('/api/orchestrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task })
+      });
+      const data = await res.json();
+      pending.remove();
+      if (!res.ok) { add('orch-msg-system', '⚠ ' + (data.error || 'orchestrator error')); return; }
+      if (data.hops && data.hops.length) {
+        const hops = document.createElement('div');
+        hops.className = 'orch-hops';
+        data.hops.forEach(h => {
+          const chip = document.createElement('span');
+          chip.className = 'orch-hop' + (h.skill_match ? '' : ' orch-hop-violation');
+          chip.textContent = `${h.agent} · ${h.skill}` + (h.skill_match ? '' : ' ✗');
+          chip.title = h.message;
+          hops.appendChild(chip);
+        });
+        messages.appendChild(hops);
+      }
+      add('orch-msg-answer', data.answer);
+    } catch (err) {
+      pending.textContent = '⚠ ' + err.message;
+    } finally {
+      send.disabled = false;
+      messages.scrollTop = messages.scrollHeight;
+    }
+  });
+})();

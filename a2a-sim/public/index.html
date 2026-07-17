@@ -89,7 +89,22 @@
 
       <!-- COLUMN 2: API Playground & Traffic Logs -->
       <section class="grid-col col-main">
-        
+
+        <!-- Orchestrator Chat -->
+        <div class="card card-orchestrator">
+          <div class="card-header">
+            <h3>Orchestrator Chat</h3>
+            <span class="api-tag">POST /api/orchestrate</span>
+          </div>
+          <div id="orch-messages" class="orch-messages">
+            <div class="orch-msg orch-msg-system">Ask anything — the orchestrator routes each step to the agent whose skill card matches (scout: research · forge: code · ledger: analysis), reasoning on the Akash-hosted worker.</div>
+          </div>
+          <form id="orch-form" class="orch-form">
+            <input type="text" id="orch-input" placeholder="e.g. What would 3 hours of A100 time cost, and write the python to compute it?" autocomplete="off" />
+            <button type="submit" class="btn-primary" id="orch-send">Send</button>
+          </form>
+        </div>
+
         <!-- API Client Playground -->
         <div class="card card-playground">
           <div class="card-header">

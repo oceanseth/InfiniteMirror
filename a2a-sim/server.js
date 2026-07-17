@@ -8,12 +8,75 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// InfiniteMirror: login-first. Identity arrives from the Pomerium proxy as
+// x-pomerium-claim-email. Everything except /api/whoami requires it unless
+// ALLOW_UNGATED=1 (local dev without the proxy in front).
+// TODO: verify X-Pomerium-Jwt-Assertion against the cluster JWKS instead of
+// trusting the claim header — required before exposing beyond localhost.
+const identityOf = (req) => req.headers['x-pomerium-claim-email'] || null;
+app.use((req, res, next) => {
+  if (process.env.ALLOW_UNGATED === '1' || req.path === '/api/whoami' || req.path === '/api/health' || identityOf(req)) {
+    return next();
+  }
+  res.status(401).send(
+    '<body style="background:#0b0f14;color:#e2e8f0;font:16px system-ui;display:grid;place-items:center;height:95vh">' +
+    '<div style="text-align:center"><h1>&#128272; InfiniteMirror</h1>' +
+    '<p>This dashboard is gated by Pomerium. Sign in through the cluster route<br>' +
+    '(e.g. <code>https://dashboard.&lt;cluster&gt;.pomerium.app</code>) — direct access carries no identity.</p>' +
+    '<p style="color:#64748b">Local dev bypass: <code>ALLOW_UNGATED=1 node server.js</code></p></div></body>');
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // In-Memory Database for Developer Dashboard
 let earnings = 0.0;
 const trafficLogs = [];
 const activeWallet = "0x3dEF78C89327eB05531Daedb4eC3Dd5287F10FD6";
+
+// InfiniteMirror: real reasoning from the Akash-hosted worker.
+// Config resolves env-first, then AWS SSM /infinitemirror/worker/ (same
+// contract as orchestrator/config.py). Without either, twins fall back to
+// canned quotes so the sim still demos offline.
+const { execSync } = require('child_process');
+let workerCfg = {
+  baseUrl: process.env.ORCH_BASE_URL,
+  apiKey: process.env.ORCH_API_KEY,
+  model: process.env.ORCH_MODEL
+};
+if (!workerCfg.baseUrl || !workerCfg.apiKey) {
+  try {
+    const params = JSON.parse(execSync(
+      'aws ssm get-parameters-by-path --path /infinitemirror/worker --with-decryption --output json',
+      { encoding: 'utf8', timeout: 15000 }
+    )).Parameters.reduce((m, p) => (m[p.Name.split('/').pop()] = p.Value, m), {});
+    workerCfg = {
+      baseUrl: workerCfg.baseUrl || params.base_url,
+      apiKey: workerCfg.apiKey || params.api_key,
+      model: workerCfg.model || params.model
+    };
+    console.log(`Worker config loaded from SSM (model: ${workerCfg.model})`);
+  } catch (e) {
+    console.warn('SSM config unavailable, twins fall back to canned quotes:', e.message.split('\n')[0]);
+  }
+}
+
+async function llmSpeech(sender, receiver, topic, previousMessage) {
+  if (!workerCfg.baseUrl || !workerCfg.apiKey) return null;
+  const messages = [
+    { role: 'system', content: `You are ${sender.name}, ${sender.role}. Perspective: ${sender.style.plan} Stay in character and be specific — 2-3 sentences, no preamble.` },
+    { role: 'user', content: previousMessage
+        ? `Debate topic: "${topic}". ${receiver.name} just said: "${previousMessage}". Respond to them directly.`
+        : `Debate topic: "${topic}". Open the discussion with your position.` }
+  ];
+  const resp = await fetch(`${workerCfg.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${workerCfg.apiKey}` },
+    body: JSON.stringify({ model: workerCfg.model, messages, temperature: 0.8, max_tokens: 160 })
+  });
+  if (!resp.ok) throw new Error(`worker responded ${resp.status}`);
+  return (await resp.json()).choices[0].message.content.trim();
+}
 
 // Pricing Configuration Defaults
 let pricingConfig = {
@@ -167,12 +230,35 @@ function calculatePrice(twins, topic, turns, tools) {
 }
 
 // Helper: Generate dialogue turn in Plan-Act-Observe-Self-Correct (PAOS) format
-function generatePAOSTurn(senderKey, receiverKey, topic, turnIndex, previousMessage) {
+async function generatePAOSTurn(senderKey, receiverKey, topic, turnIndex, previousMessage) {
   const sender = personalities[senderKey] || personalities["general-assistant"];
   const receiver = personalities[receiverKey] || personalities["general-assistant"];
-  
+
+  // Real reasoning from the Akash worker; canned quotes as offline fallback
+  let source = 'canned';
+  let speech = null;
+  try {
+    speech = await llmSpeech(sender, receiver, topic, previousMessage);
+    if (speech) source = workerCfg.model;
+  } catch (e) {
+    console.warn('worker call failed, using canned quote:', e.message);
+  }
+  if (speech) {
+    return {
+      twin: sender.name,
+      avatar: sender.avatar,
+      role: sender.role,
+      source,
+      plan: `Evaluate: "${topic}". Current turn: #${turnIndex + 1}. Goal: ${sender.style.plan}`,
+      act: `Spoke: "${speech}"`,
+      observe: previousMessage ? `Heard: "${previousMessage.substring(0, 60)}..."` : "Initiating dialogue simulation.",
+      selfCorrect: `Reflecting on feedback. Adjusting vector: ${sender.style.selfCorrect}`,
+      message: speech
+    };
+  }
+
   // Custom dialogue lines matching the topic
-  let speech = sender.style.quotes[turnIndex % sender.style.quotes.length];
+  speech = sender.style.quotes[turnIndex % sender.style.quotes.length];
   if (previousMessage) {
     if (senderKey === "mark cuban" && previousMessage.includes("network")) {
       speech = "Garry talks about network effects, but if you don't have customers paying you cash day one, your network is worth zero! Show me the money.";
@@ -189,6 +275,7 @@ function generatePAOSTurn(senderKey, receiverKey, topic, turnIndex, previousMess
     twin: sender.name,
     avatar: sender.avatar,
     role: sender.role,
+    source: 'canned',
     plan: `Evaluate: "${topic}". Current turn: #${turnIndex + 1}. Goal: ${sender.style.plan}`,
     act: `Spoke: "${speech}"`,
     observe: previousMessage ? `Heard: "${previousMessage.substring(0, 60)}..."` : "Initiating dialogue simulation.",
@@ -215,8 +302,74 @@ app.post('/api/pricing-config', (req, res) => {
   res.json({ success: true, config: pricingConfig });
 });
 
+// API: Deep health — dashboard up + Akash worker reachable. Public (exempt
+// from the identity gate and exposed via an unauthenticated Pomerium route)
+// so uptime monitors can watch the whole chain. Worker probe cached 30s.
+let healthCache = { at: 0, worker: null };
+app.get('/api/health', async (req, res) => {
+  const now = Date.now();
+  if (now - healthCache.at > 30000) {
+    let worker = { configured: !!(workerCfg.baseUrl && workerCfg.apiKey), reachable: false };
+    if (worker.configured) {
+      const t0 = Date.now();
+      try {
+        const r = await fetch(`${workerCfg.baseUrl}/models`, {
+          headers: { Authorization: `Bearer ${workerCfg.apiKey}` },
+          signal: AbortSignal.timeout(8000)
+        });
+        worker.reachable = r.ok;
+        worker.latencyMs = Date.now() - t0;
+        worker.model = workerCfg.model;
+      } catch (e) {
+        worker.error = e.name === 'TimeoutError' ? 'timeout' : e.message;
+      }
+    }
+    healthCache = { at: now, worker };
+  }
+  const ok = healthCache.worker.reachable;
+  res.status(ok ? 200 : 503).json({
+    ok,
+    service: 'infinitemirror-dashboard',
+    uptimeSec: Math.floor(process.uptime()),
+    worker: healthCache.worker
+  });
+});
+
+// API: Who is the Pomerium-authenticated user? (headers set by the proxy)
+app.get('/api/whoami', (req, res) => {
+  const email = identityOf(req);
+  res.json({ email, gated: !!email });
+});
+
+// API: Chat with the orchestrator harness. Each request runs the skill-aware
+// routing loop against the Akash worker; the reply includes every hop so the
+// UI can show which agent handled which skill. Identity is stamped into the
+// trace, tying reasoning requests to the Pomerium login that made them.
+const { execFile } = require('child_process');
+const REPO_ROOT = path.join(__dirname, '..');
+const PYTHON = path.join(REPO_ROOT, '.venv', 'bin', 'python');
+app.post('/api/orchestrate', (req, res) => {
+  const task = (req.body.task || '').trim();
+  if (!task) return res.status(400).json({ error: 'task is required' });
+  const identity = identityOf(req) || 'ungated-local';
+  execFile(PYTHON, [path.join(REPO_ROOT, 'orchestrator', 'orchestrator.py'), '--json', task],
+    { timeout: 180000, maxBuffer: 4 * 1024 * 1024 },
+    (err, stdout, stderr) => {
+      if (err) {
+        console.error('orchestrate failed:', stderr || err.message);
+        return res.status(502).json({ error: 'orchestrator failed', detail: (stderr || err.message).slice(-400) });
+      }
+      try {
+        const result = JSON.parse(stdout.trim().split('\n').pop());
+        res.json({ identity, ...result });
+      } catch (e) {
+        res.status(502).json({ error: 'bad orchestrator output', detail: stdout.slice(-400) });
+      }
+    });
+});
+
 // API: Simulate Digital Twin Dialogue with HTTP 402 Dynamic Pricing Gating
-app.post('/api/simulate', (req, res) => {
+app.post('/api/simulate', async (req, res) => {
   const { twins, topic, turns, tools } = req.body;
 
   // Validation
@@ -282,7 +435,7 @@ app.post('/api/simulate', (req, res) => {
     const sender = i % 2 === 0 ? twin1 : twin2;
     const receiver = i % 2 === 0 ? twin2 : twin1;
     
-    const step = generatePAOSTurn(sender, receiver, topic, i, lastMessage);
+    const step = await generatePAOSTurn(sender, receiver, topic, i, lastMessage);
     simulationDialogue.push(step);
     lastMessage = step.message;
   }

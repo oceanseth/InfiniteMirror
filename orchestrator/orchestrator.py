@@ -83,7 +83,7 @@ def route(registry, transcript):
     return obj
 
 
-def run(task):
+def run(task, collect=None):
     registry = load_registry()
     trace_id = uuid.uuid4().hex[:12]
     log(trace_id, {"role": "task", "text": task})
@@ -102,6 +102,10 @@ def run(task):
             "message": decision.get("message", ""), "skill_match": valid,
             "cards_shown": {n: a["skills"] for n, a in registry.items()},
         })
+        if collect is not None:
+            collect.append({"hop": hop, "agent": agent, "skill": skill,
+                            "skill_match": valid,
+                            "message": decision.get("message", "")})
         if not valid:
             # The mistake we are training out of the model: delegating without
             # (or against) skill knowledge. Log it, correct course, continue.
@@ -113,6 +117,8 @@ def run(task):
 
         reply = chat(registry[agent]["system_prompt"], decision["message"])
         log(trace_id, {"role": "agent_reply", "hop": hop, "agent": agent, "text": reply})
+        if collect is not None:
+            collect[-1]["reply"] = reply
         transcript += f"\n[{agent} ({skill}) replied] {reply}\n"
 
     log(trace_id, {"role": "finish", "text": "hop limit reached", "error": True})
@@ -120,8 +126,16 @@ def run(task):
 
 
 if __name__ == "__main__":
-    task = " ".join(sys.argv[1:]) or (
+    args = sys.argv[1:]
+    as_json = "--json" in args
+    args = [a for a in args if a != "--json"]
+    task = " ".join(args) or (
         "Estimate the monthly cost of one A100 at $1.10/hour, write a python "
         "one-liner that computes it, and summarize the result in one sentence."
     )
-    print(run(task))
+    if as_json:
+        hops = []
+        answer = run(task, collect=hops)
+        print(json.dumps({"answer": answer, "hops": hops}, ensure_ascii=False))
+    else:
+        print(run(task))

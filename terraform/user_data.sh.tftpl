@@ -1,0 +1,99 @@
+#!/bin/bash
+set -euxo pipefail
+exec > /var/log/infinitemirror-init.log 2>&1
+
+dnf install -y docker git nodejs python3.11 openssl
+systemctl enable --now docker
+
+# --- App ---
+git clone ${repo_url} /opt/infinitemirror
+cd /opt/infinitemirror
+python3.11 -m venv .venv
+.venv/bin/pip install --quiet openai pyyaml
+
+cd /opt/infinitemirror/mcp-server && npm install --no-audit --no-fund && cd /opt/infinitemirror
+
+cat > /etc/systemd/system/infinitemirror-mcp.service <<'UNIT'
+[Unit]
+Description=InfiniteMirror MCP server
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/infinitemirror/mcp-server
+Environment=PORT=3001
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl enable --now infinitemirror-mcp
+
+cat > /etc/systemd/system/infinitemirror-dashboard.service <<'UNIT'
+[Unit]
+Description=InfiniteMirror dashboard (a2a-sim)
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/infinitemirror/a2a-sim
+Environment=AWS_DEFAULT_REGION=${region}
+Environment=PORT=3000
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl enable --now infinitemirror-dashboard
+
+# --- Pomerium (self-hosted core, hosted authenticate, autocert) ---
+mkdir -p /etc/pomerium/autocert
+cat > /etc/pomerium/config.yaml <<CFG
+address: :443
+http_redirect_addr: :80
+authenticate_service_url: https://authenticate.pomerium.app
+runtime_flags:
+  mcp: true
+autocert: true
+autocert_dir: /pomerium/autocert
+shared_secret: $(openssl rand -base64 32)
+cookie_secret: $(openssl rand -base64 32)
+routes:
+  - from: https://${domain}
+    to: http://127.0.0.1:3000
+    prefix: /api/health
+    allow_public_unauthenticated_access: true
+  - from: https://${domain}
+    to: http://127.0.0.1:3000
+    policy:
+      - allow:
+          or:
+${allowed_emails}
+    pass_identity_headers: true
+  - from: https://dashboard.${domain}
+    to: http://127.0.0.1:3000
+    policy:
+      - allow:
+          or:
+${allowed_emails}
+    pass_identity_headers: true
+  - from: https://${mcp_domain}
+    to: http://127.0.0.1:3001
+    name: InfiniteMirror Orchestrator
+    mcp:
+      server: {}
+    policy:
+      - allow:
+          or:
+${allowed_emails}
+    pass_identity_headers: true
+CFG
+chmod 600 /etc/pomerium/config.yaml
+
+docker run -d --name pomerium --restart always --network host \
+  -v /etc/pomerium:/pomerium \
+  pomerium/pomerium:v0.33.0
+
+echo "init complete"
