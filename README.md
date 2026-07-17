@@ -95,13 +95,31 @@ env vars override for offline work (see `orchestrator/config.py`).
 - **Funding window for `inkling.yml`** — 8×H200 ≈ $12–25/hr; do we want a
   time-boxed demo window on the one matching provider?
 - **GBrain credentials** — client-memory writes are stubbed until we have an
-  account. Pomerium: credentials are in SSM (`/infinitemirror/pomerium/
-  api_key` and `cluster_token`), and a Pomerium Zero connector runs in
-  Docker (`pomerium-connector`, pomerium/pomerium:v0.33.0, port 443). Next
-  step in the [Zero console](https://console.pomerium.app): add a route with
-  the Akash vLLM endpoint as upstream, inject the worker api_key via a
-  set-request-header so clients authenticate through Pomerium SSO and never
-  hold the model key — session-scoped, revocable access to a live GPU asset.
+  account.
+
+## Pomerium demo route (one console step remaining)
+
+Cluster: `needed-moray-8897.pomerium.app` (token + domain in SSM under
+`/infinitemirror/pomerium/`); the Zero connector runs locally in Docker
+(`pomerium-connector`, pomerium/pomerium:v0.33.0, port 443). In the
+[Zero console](https://console.pomerium.app) create the route:
+
+| Field | Value |
+|---|---|
+| From | `https://dashboard.needed-moray-8897.pomerium.app` |
+| To | `http://host.docker.internal:3000` |
+| Policy | allow → email is `seth@voicecert.com` |
+
+Then start the dashboard (`node a2a-sim/server.js`) and open
+`https://dashboard.needed-moray-8897.pomerium.app` — Pomerium SSO logs you
+in, the badge shows your email, and the Orchestrator Chat routes reasoning
+to the Akash worker under that identity. If the cluster DNS doesn't reach
+your NATed laptop, demo locally by adding
+`127.0.0.1 dashboard.needed-moray-8897.pomerium.app` to `/etc/hosts` — the
+connector on port 443 serves the real route + cert either way. A second
+route can front the Akash vLLM endpoint directly with the worker api_key
+injected via set-request-header, so clients hold a Pomerium session, never
+the model key.
 
 ## License
 
