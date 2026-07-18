@@ -1,0 +1,779 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 12 — Assets get physical</title>
+    <!-- head is discarded by the runtime; everything lives inside <template> -->
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400-italic.woff2") format("woff2");
+          font-weight: 400;
+          font-style: italic;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+          font-weight: 600;
+          font-style: normal;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+          font-display: block;
+        }
+
+        /* Root: sized box, container for cqw units. No background here —
+           the full-bleed ground is a dedicated clip layer below. */
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          container-type: size;
+          overflow: hidden;
+          font-family: "Hanken Grotesk", sans-serif;
+          color: #1f2be0;
+        }
+
+        /* ── Ground clip: paper + permanent graph-paper grid + frame hairlines ── */
+        .f12-ground {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 0.06cqw, transparent 0.06cqw),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 0.06cqw, transparent 0.06cqw);
+          background-size: 2cqw 2cqw;
+        }
+        .f12-hairline {
+          position: absolute;
+          left: 4cqw;
+          right: 4cqw;
+          height: 0.12cqw;
+          background: #1f2be0;
+        }
+        .f12-hairline-top {
+          top: 3cqw;
+        }
+        .f12-hairline-bottom {
+          bottom: 3cqw;
+        }
+
+        /* ── Stage clip: diagram + card + payoff ── */
+        .f12-stage {
+          position: absolute;
+          inset: 0;
+        }
+
+        /* Top chrome (above content, below top hairline) */
+        .f12-kicker {
+          position: absolute;
+          left: 77px;
+          top: 82px;
+          font-weight: 600;
+          font-size: 16px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .f12-ordinal {
+          position: absolute;
+          right: 77px;
+          top: 82px;
+          font-family: "DM Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.06em;
+          color: #5560e5;
+          opacity: 0;
+        }
+
+        /* Mirror plane (callback to Frame 3) + vertical mono label */
+        .f12-plane-svg {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          pointer-events: none;
+        }
+        .f12-plane-svg path {
+          fill: none;
+          stroke-linecap: square;
+        }
+        #f12-plane-line {
+          stroke: #1f2be0;
+          stroke-width: 5;
+        }
+        #f12-plane-sheen {
+          stroke: rgba(31, 43, 224, 0.18);
+          stroke-width: 2;
+        }
+        .f12-vlabel {
+          position: absolute;
+          left: 792px;
+          top: 196px;
+          writing-mode: vertical-rl;
+          font-family: "DM Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #5560e5;
+          opacity: 0;
+        }
+
+        /* Glyph tiles — scale-swap wraps (digital → physical) */
+        .f12-tile {
+          position: absolute;
+          left: 340px;
+          width: 260px;
+          height: 200px;
+          opacity: 0;
+        }
+        #f12-tile-1 {
+          top: 175px;
+        }
+        #f12-tile-2 {
+          top: 430px;
+        }
+        #f12-tile-3 {
+          top: 685px;
+        }
+        .f12-glyph {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          gap: 10px;
+          transform-origin: 50% 50%;
+          will-change: transform, opacity;
+        }
+        .f12-glyph svg {
+          width: 128px;
+          height: 128px;
+          display: block;
+        }
+        .f12-glyph svg .stroked {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 4;
+          stroke-linecap: square;
+          stroke-linejoin: miter;
+        }
+        .f12-glabel {
+          font-family: "DM Mono", monospace;
+          font-size: 20px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        /* Outgoing digital glyphs sit at ink-faint strength; incoming above, hidden */
+        .f12-gout {
+          z-index: 1;
+          opacity: 0.55;
+        }
+        .f12-gin {
+          z-index: 2;
+          opacity: 0;
+        }
+
+        /* Link rail: access card → robot arm (stepped, grid-orthogonal) */
+        .f12-link-svg {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          pointer-events: none;
+        }
+        #f12-link {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 3;
+          stroke-linecap: square;
+        }
+
+        /* Session-scoped access key card (the focal, back half) */
+        .f12-card {
+          position: absolute;
+          left: 1140px;
+          top: 300px;
+          width: 460px;
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          padding: 26px 30px 30px;
+          opacity: 0;
+        }
+        .f12-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          border-bottom: 2px solid #1f2be0;
+          padding-bottom: 14px;
+          font-family: "DM Mono", monospace;
+          opacity: 0;
+        }
+        .f12-card-title {
+          font-size: 21px;
+          letter-spacing: 0.06em;
+        }
+        .f12-card-id {
+          font-size: 17px;
+          letter-spacing: 0.06em;
+          color: #5560e5;
+        }
+        .f12-krow {
+          display: grid;
+          grid-template-columns: 118px 1fr;
+          align-items: baseline;
+          padding: 13px 0;
+          border-bottom: 1px solid rgba(31, 43, 224, 0.18);
+          opacity: 0;
+        }
+        .f12-kkey {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #5560e5;
+        }
+        .f12-kval {
+          font-size: 21px;
+          font-weight: 400;
+        }
+        .f12-timer-wrap {
+          margin-top: 20px;
+          opacity: 0;
+        }
+        .f12-timer-label {
+          font-weight: 600;
+          font-size: 13px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #5560e5;
+          margin-bottom: 6px;
+        }
+        .f12-timer-line {
+          position: relative;
+          display: inline-block;
+        }
+        .f12-timer {
+          font-family: "DM Mono", monospace;
+          font-size: 64px;
+          line-height: 1.05;
+          font-variant-numeric: tabular-nums;
+          letter-spacing: 0.02em;
+          display: inline-block;
+          transform-origin: left center;
+          min-width: 300px;
+        }
+        /* Sketchout strike lines over the timer (css-marker-patterns) */
+        .f12-strike {
+          position: absolute;
+          top: 0;
+          left: -6px;
+          right: -6px;
+          bottom: 0;
+          overflow: hidden;
+          z-index: 1;
+          pointer-events: none;
+        }
+        .f12-strike-line {
+          position: absolute;
+          display: block;
+          top: 50%;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background: #1f2be0;
+          transform-origin: left center;
+          opacity: 0;
+        }
+
+        /* REVOKED stamp — lands over the card on "revocable" */
+        .f12-stamp {
+          position: absolute;
+          left: 50%;
+          top: 57%;
+          width: 306px;
+          margin-left: -153px;
+          margin-top: -46px;
+          border: 5px solid #1f2be0;
+          background: rgba(240, 235, 222, 0.88);
+          padding: 14px 0;
+          text-align: center;
+          font-weight: 600;
+          font-size: 44px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          z-index: 3;
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+
+        /* Payoff word — the one Newsreader element (squint dominance) */
+        .f12-payoff {
+          position: absolute;
+          right: 320px;
+          top: 690px;
+          font-family: "Newsreader", serif;
+          font-style: italic;
+          font-weight: 400;
+          font-size: 96px;
+          line-height: 1;
+          letter-spacing: -0.005em;
+          opacity: 0;
+        }
+      </style>
+
+      <div id="root" data-composition-id="12-assets-get-physical" data-width="1920" data-height="1080" data-duration="12.276">
+        <!-- Ground: full-bleed paper + grid + hairlines on the lowest track -->
+        <div
+          class="clip f12-ground"
+          id="f12-ground"
+          data-start="0"
+          data-duration="12.276"
+          data-track-index="0"
+        >
+          <div class="f12-hairline f12-hairline-top"></div>
+          <div class="f12-hairline f12-hairline-bottom"></div>
+        </div>
+
+        <!-- Stage: mirror plane callback, glyph swaps, access key card -->
+        <div
+          class="clip f12-stage"
+          id="f12-stage"
+          data-start="0"
+          data-duration="12.276"
+          data-track-index="1"
+        >
+          <div class="f12-kicker" id="f12-kicker">Assets get physical</div>
+          <div class="f12-ordinal" id="f12-ordinal">012</div>
+
+          <!-- Mirror plane (same left-of-center geometry as Frame 3) -->
+          <svg class="f12-plane-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <path id="f12-plane-line" d="M 760 170 L 760 830" />
+            <path id="f12-plane-sheen" d="M 778 192 L 778 808" />
+          </svg>
+          <div class="f12-vlabel" id="f12-vlabel">Mirror boundary</div>
+
+          <!-- Tile 1: document → robot arm -->
+          <div class="f12-tile" id="f12-tile-1">
+            <div class="f12-glyph f12-gout" id="f12-g-doc">
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect class="stroked" x="36" y="22" width="48" height="76" />
+                <path class="stroked" d="M 46 44 L 74 44" />
+                <path class="stroked" d="M 46 56 L 74 56" />
+                <path class="stroked" d="M 46 68 L 64 68" />
+              </svg>
+              <div class="f12-glabel">Document</div>
+            </div>
+            <div class="f12-glyph f12-gin" id="f12-g-robot">
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect class="stroked" x="34" y="94" width="52" height="10" />
+                <rect class="stroked" x="52" y="70" width="16" height="16" />
+                <path class="stroked" d="M 60 78 L 44 48" />
+                <rect class="stroked" x="38" y="42" width="12" height="12" />
+                <g id="f12-arm-fore">
+                  <path class="stroked" d="M 44 48 L 86 34" />
+                  <path class="stroked" d="M 86 34 L 96 26" />
+                  <path class="stroked" d="M 86 34 L 96 42" />
+                </g>
+              </svg>
+              <div class="f12-glabel">Robot arm</div>
+            </div>
+          </div>
+
+          <!-- Tile 2: database → camera -->
+          <div class="f12-tile" id="f12-tile-2">
+            <div class="f12-glyph f12-gout" id="f12-g-db">
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect class="stroked" x="32" y="26" width="56" height="18" />
+                <rect class="stroked" x="32" y="51" width="56" height="18" />
+                <rect class="stroked" x="32" y="76" width="56" height="18" />
+              </svg>
+              <div class="f12-glabel">Database</div>
+            </div>
+            <div class="f12-glyph f12-gin" id="f12-g-cam">
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect class="stroked" x="44" y="30" width="22" height="10" />
+                <rect class="stroked" x="24" y="40" width="72" height="52" />
+                <rect class="stroked" x="46" y="52" width="30" height="30" />
+                <rect id="f12-cam-ap" x="54" y="60" width="14" height="14" fill="#1f2be0" />
+              </svg>
+              <div class="f12-glabel">Camera</div>
+            </div>
+          </div>
+
+          <!-- Tile 3: live system → sensor -->
+          <div class="f12-tile" id="f12-tile-3">
+            <div class="f12-glyph f12-gout" id="f12-g-live">
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect class="stroked" x="24" y="30" width="72" height="60" />
+                <path class="stroked" d="M 38 48 L 50 58 L 38 68" />
+                <path class="stroked" d="M 58 68 L 78 68" />
+              </svg>
+              <div class="f12-glabel">Live system</div>
+            </div>
+            <div class="f12-glyph f12-gin" id="f12-g-sensor">
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect class="stroked" x="26" y="36" width="56" height="56" />
+                <rect id="f12-sn-dot" x="47" y="57" width="14" height="14" fill="#1f2be0" />
+                <g id="f12-sn-sig" opacity="0.55">
+                  <path class="stroked" d="M 92 52 L 92 32 L 72 32" style="stroke-width: 3" />
+                  <path class="stroked" d="M 104 60 L 104 20 L 64 20" style="stroke-width: 3" />
+                </g>
+              </svg>
+              <div class="f12-glabel">Sensor</div>
+            </div>
+          </div>
+
+          <!-- Access rail: card → robot arm, severed on "revocable" -->
+          <svg class="f12-link-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <path id="f12-link" d="M 1138 470 L 880 470 L 880 280 L 606 280" />
+          </svg>
+
+          <!-- Session-scoped access key card -->
+          <div class="f12-card" id="f12-card">
+            <div class="f12-card-header" id="f12-card-header">
+              <span class="f12-card-title">SESSION KEY</span>
+              <span class="f12-card-id">KEY-012</span>
+            </div>
+            <div class="f12-krow" id="f12-krow-1">
+              <span class="f12-kkey">Scope</span>
+              <span class="f12-kval">pilot: arm-01 only</span>
+            </div>
+            <div class="f12-krow" id="f12-krow-2">
+              <span class="f12-kkey">Grant</span>
+              <span class="f12-kval">this session only</span>
+            </div>
+            <div class="f12-timer-wrap" id="f12-timer-wrap">
+              <div class="f12-timer-label">Access expires</div>
+              <span class="f12-timer-line">
+                <span class="f12-timer" id="f12-timer">T-47:12</span>
+                <span class="f12-strike" id="f12-strike">
+                  <span class="f12-strike-line" id="f12-strike-fwd"></span>
+                  <span class="f12-strike-line" id="f12-strike-bwd"></span>
+                </span>
+              </span>
+            </div>
+            <div class="f12-stamp" id="f12-stamp">Revoked</div>
+          </div>
+
+          <!-- Payoff word -->
+          <div class="f12-payoff" id="f12-payoff">Revocable.</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+
+          /* Timing — Scene windows scaled to the authoritative 11.776s duration
+             (draft 0–12.0s × 0.9813):
+             Scene 1  0.00–3.14s : mirror plane self-draws (Frame 3 callback);
+                                   on "won't stay digital" the three digital
+                                   glyphs reappear at ink-faint.
+             Scene 2  3.14–6.87s : "robots, cameras, sensors" — each glyph
+                                   scale-swaps to its physical counterpart on
+                                   its spoken cue, one live SVG internal each.
+             Scene 3  6.87–10.21s: "who can pilot this machine…" — access-key
+                                   card docks right, session timer counts DOWN;
+                                   on "revocable" the REVOKED stamp lands and
+                                   the rail to the robot arm severs.
+             Scene 4 10.21–11.78s: held read; still (no exit — the root
+                                   transition owns the exit). */
+
+          /* ── Scene 1 cues ── */
+          var PLANE_DRAW_START = 0.1; // hero visible well before t=0.5s
+          var PLANE_DRAW_DUR = 0.95; // svg-path-draw, power2.out (pen trace)
+          var SHEEN_DRAW_START = 0.32; // overlaps plane tail — continuous pen
+          var SHEEN_DRAW_DUR = 0.9;
+          var CHROME_AT = 0.25;
+          var VLABEL_AT = 1.15;
+          var TILE_REVEAL = [1.55, 1.95, 2.35]; // "documents, data, live systems" echo
+          var TILE_REVEAL_DUR = 0.6;
+
+          /* ── Scene 2 cues: scale-swap-transition per glyph ── */
+          var SWAP_AT = [3.3, 4.25, 5.15]; // robot / camera / sensor spoken cues
+          var EXIT_DUR = 0.35; // outgoing shrink+fade, power2.in
+          var ENTER_DUR = 0.55; // incoming, power3.out (no overshoot per direction)
+          var OVERLAP = 0.15; // morph illusion window
+          var EXIT_SCALE = 0.72;
+
+          /* ── Scene 3 cues ── */
+          var CARD_AT = 6.9;
+          var CARD_DUR = 0.65;
+          var HEADER_AT = 7.3;
+          var ROW_1_AT = 7.5;
+          var ROW_2_AT = 7.7;
+          var LINK_DRAW_AT = 7.7;
+          var LINK_DRAW_DUR = 0.6;
+          var TIMER_IN_AT = 7.95; // counting-dynamic-scale: entrance scale synced
+          var COUNT_START = 8.0; // with the count start
+          var COUNT_END = 9.9; // count freezes when the stamp lands
+          var COUNT_FROM = 2832; // T-47:12, time-lapse tick-down
+          var COUNT_TO = 1907; // T-31:47 — revoked mid-flight, not expired
+          var STAMP_AT = 9.85; // "revocable"
+          var LINK_RETRACT_AT = 9.9;
+          var LINK_RETRACT_DUR = 0.55;
+          var STRIKE_FWD_AT = 10.05;
+          var STRIKE_BWD_AT = 10.2;
+          var DIM_AT = 10.0;
+          var PAYOFF_AT = 10.15; // last cued reveal, settles into the hold
+
+          /* svg-path-draw: dash pattern from measured geometry, not magic numbers */
+          var plane = document.getElementById("f12-plane-line");
+          var sheen = document.getElementById("f12-plane-sheen");
+          var link = document.getElementById("f12-link");
+          [plane, sheen, link].forEach(function (p) {
+            var len = p.getTotalLength();
+            p.style.strokeDasharray = String(len);
+            p.style.strokeDashoffset = String(len);
+          });
+          var linkLen = link.getTotalLength();
+
+          var timerEl = document.getElementById("f12-timer");
+          function fmtTimer(v) {
+            var total = Math.round(v);
+            var m = Math.floor(total / 60);
+            var s = total % 60;
+            return "T-" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+          }
+
+          var tl = gsap.timeline({ paused: true });
+
+          /* ══ Scene 1 — mirror plane callback + digital glyphs at ink-faint ══ */
+          tl.fromTo(
+            plane,
+            { strokeDashoffset: plane.getTotalLength() },
+            { strokeDashoffset: 0, duration: PLANE_DRAW_DUR, ease: "power2.out" },
+            PLANE_DRAW_START
+          );
+          tl.fromTo(
+            sheen,
+            { strokeDashoffset: sheen.getTotalLength() },
+            { strokeDashoffset: 0, duration: SHEEN_DRAW_DUR, ease: "power2.out" },
+            SHEEN_DRAW_START
+          );
+          tl.fromTo(
+            "#f12-kicker",
+            { y: 12, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.5, ease: "power3.out" },
+            CHROME_AT
+          );
+          tl.fromTo(
+            "#f12-ordinal",
+            { y: 12, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.5, ease: "power3.out" },
+            CHROME_AT + 0.08
+          );
+          tl.fromTo(
+            "#f12-vlabel",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.5, ease: "power2.out" },
+            VLABEL_AT
+          );
+          // "won't stay digital" — the three glyphs from Frame 3 reappear, dimmed
+          ["#f12-tile-1", "#f12-tile-2", "#f12-tile-3"].forEach(function (sel, i) {
+            tl.fromTo(
+              sel,
+              { y: 16, autoAlpha: 0 },
+              { y: 0, autoAlpha: 1, duration: TILE_REVEAL_DUR, ease: "power3.out" },
+              TILE_REVEAL[i]
+            );
+          });
+
+          /* ══ Scene 2 — scale-swap-transition on each spoken cue ══
+             Outgoing rushes away (power2.in), incoming arrives with a long-tail
+             settle (power3.out — direction bans overshoot); OVERLAP creates the
+             morph; incoming z-index sits above outgoing. */
+          var swaps = [
+            { out: "#f12-g-doc", inn: "#f12-g-robot" },
+            { out: "#f12-g-db", inn: "#f12-g-cam" },
+            { out: "#f12-g-live", inn: "#f12-g-sensor" },
+          ];
+          swaps.forEach(function (pair, i) {
+            var T = SWAP_AT[i];
+            tl.to(
+              pair.out,
+              { scale: EXIT_SCALE, opacity: 0, duration: EXIT_DUR, ease: "power2.in" },
+              T
+            );
+            tl.fromTo(
+              pair.inn,
+              { scale: EXIT_SCALE, opacity: 0 },
+              { scale: 1, opacity: 1, duration: ENTER_DUR, ease: "power3.out" },
+              T + EXIT_DUR - OVERLAP
+            );
+          });
+
+          /* svg-icon-enrichment — one live internal each, then stills.
+             Rotation/scale via the SVG transform ATTRIBUTE (viewBox coords),
+             never CSS transform-origin (bbox-local trap). */
+          // Robot arm: forearm joint rotates once around the elbow (44,48)
+          var armState = { deg: 0 };
+          var armFore = document.getElementById("f12-arm-fore");
+          function armUpdate() {
+            armFore.setAttribute("transform", "rotate(" + armState.deg + " 44 48)");
+          }
+          tl.to(armState, { deg: -16, duration: 0.45, ease: "power1.inOut", onUpdate: armUpdate }, 4.1);
+          tl.to(armState, { deg: 0, duration: 0.45, ease: "power1.inOut", onUpdate: armUpdate }, 4.55);
+
+          // Camera: aperture blinks once around its center (61,67)
+          var apState = { s: 1 };
+          var apEl = document.getElementById("f12-cam-ap");
+          function apUpdate() {
+            apEl.setAttribute(
+              "transform",
+              "translate(61 67) scale(" + apState.s + ") translate(-61 -67)"
+            );
+          }
+          tl.to(apState, { s: 0.15, duration: 0.18, ease: "power2.in", onUpdate: apUpdate }, 5.1);
+          tl.to(apState, { s: 1, duration: 0.28, ease: "power2.out", onUpdate: apUpdate }, 5.28);
+
+          // Sensor: pulse dot ticks once around its center (54,64)
+          var dotState = { s: 1 };
+          var dotEl = document.getElementById("f12-sn-dot");
+          function dotUpdate() {
+            dotEl.setAttribute(
+              "transform",
+              "translate(54 64) scale(" + dotState.s + ") translate(-54 -64)"
+            );
+          }
+          tl.to(dotState, { s: 1.5, duration: 0.22, ease: "power2.out", onUpdate: dotUpdate }, 5.9);
+          tl.to(dotState, { s: 1, duration: 0.3, ease: "power1.inOut", onUpdate: dotUpdate }, 6.12);
+          tl.fromTo(
+            "#f12-sn-sig",
+            { opacity: 0.55 },
+            { opacity: 1, duration: 0.2, ease: "power2.out" },
+            5.9
+          );
+          tl.to("#f12-sn-sig", { opacity: 0.55, duration: 0.3, ease: "power1.out" }, 6.2);
+
+          /* ══ Scene 3 — the access-key card (focal) ══ */
+          tl.fromTo(
+            "#f12-card",
+            { x: 70, autoAlpha: 0 },
+            { x: 0, autoAlpha: 1, duration: CARD_DUR, ease: "power3.out" },
+            CARD_AT
+          );
+          [
+            ["#f12-card-header", HEADER_AT],
+            ["#f12-krow-1", ROW_1_AT],
+            ["#f12-krow-2", ROW_2_AT],
+          ].forEach(function (item) {
+            tl.fromTo(
+              item[0],
+              { y: 12, autoAlpha: 0 },
+              { y: 0, autoAlpha: 1, duration: 0.45, ease: "power3.out" },
+              item[1]
+            );
+          });
+          // Rail draws card → robot arm (access granted)
+          tl.fromTo(
+            link,
+            { strokeDashoffset: linkLen },
+            { strokeDashoffset: 0, duration: LINK_DRAW_DUR, ease: "power2.out" },
+            LINK_DRAW_AT
+          );
+          // counting-dynamic-scale: entrance scale synced with the count start;
+          // the countdown itself is linear (it is a timer, not drama)
+          tl.fromTo(
+            "#f12-timer-wrap",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.4, ease: "power2.out" },
+            TIMER_IN_AT
+          );
+          tl.fromTo(
+            "#f12-timer",
+            { scale: 0.92 },
+            { scale: 1, duration: 0.45, ease: "power3.out" },
+            TIMER_IN_AT
+          );
+          var countState = { v: COUNT_FROM };
+          tl.to(
+            countState,
+            {
+              v: COUNT_TO,
+              duration: COUNT_END - COUNT_START,
+              ease: "none",
+              onUpdate: function () {
+                timerEl.textContent = fmtTimer(countState.v);
+              },
+            },
+            COUNT_START
+          );
+
+          /* "revocable" — REVOKED stamp lands (marker-stamp), timer struck
+             through (css-marker-patterns sketchout), rail severs (retracting
+             svg-path-draw). */
+          tl.fromTo(
+            "#f12-stamp",
+            { scale: 1.85, rotation: -8, autoAlpha: 0 },
+            { scale: 1, rotation: -8, autoAlpha: 1, duration: 0.32, ease: "power3.out" },
+            STAMP_AT
+          );
+          tl.fromTo(
+            "#f12-strike-fwd",
+            { scaleX: 0, rotation: -8, opacity: 1 },
+            { scaleX: 1, rotation: -8, opacity: 1, duration: 0.25, ease: "power2.out" },
+            STRIKE_FWD_AT
+          );
+          tl.fromTo(
+            "#f12-strike-bwd",
+            { scaleX: 0, rotation: 8, opacity: 1 },
+            { scaleX: 1, rotation: 8, opacity: 1, duration: 0.25, ease: "power2.out" },
+            STRIKE_BWD_AT
+          );
+          tl.to(
+            link,
+            { strokeDashoffset: linkLen, duration: LINK_RETRACT_DUR, ease: "power2.in" },
+            LINK_RETRACT_AT
+          );
+          // Access pulled: card body + machine dim under the stamp
+          tl.to(
+            "#f12-krow-1, #f12-krow-2, #f12-timer-wrap",
+            { opacity: 0.55, duration: 0.45, ease: "power2.out" },
+            DIM_AT
+          );
+          tl.to("#f12-g-robot", { opacity: 0.4, duration: 0.45, ease: "power2.out" }, DIM_AT + 0.1);
+
+          // Payoff word — the last cued reveal, then the held read
+          tl.fromTo(
+            "#f12-payoff",
+            { y: 26, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.6, ease: "power3.out" },
+            PAYOFF_AT
+          );
+
+          /* ══ Scene 4 — held read to 11.776s: still. No exit tween. ══ */
+
+          window.__timelines["12-assets-get-physical"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -10,6 +10,17 @@ scoped access to it — through their agent harness on
 [zero.xyz](https://zero.xyz). Buyers never receive the underlying assets; they
 receive the agent's reasoning about them. The asset stays behind the mirror.
 
+**Live:** [infinitemirror.masky.ai](https://infinitemirror.masky.ai) ·
+[dashboard](https://dashboard.infinitemirror.masky.ai) (Pomerium-gated)
+
+**▶ Watch the 2½-minute explainer:**
+
+[![InfiniteMirror explainer video](https://img.youtube.com/vi/oJVMNGjUvAc/maxresdefault.jpg)](https://youtu.be/oJVMNGjUvAc)
+
+*(source composition in [`videos/infinitemirror-explainer/`](videos/infinitemirror-explainer/) — the render lives on [YouTube](https://youtu.be/oJVMNGjUvAc))*
+
+![InfiniteMirror dashboard — Orchestrator Chat, A2A twin simulator, and x402 dynamic pricing](demo/dashboard-preview.png)
+
 ## The orchestrator harness: agents that learn to talk to each other
 
 InfiniteMirror's core feature is an **orchestrator harness that we own**, and

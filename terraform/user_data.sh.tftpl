@@ -48,12 +48,31 @@ WantedBy=multi-user.target
 UNIT
 systemctl enable --now infinitemirror-dashboard
 
+cat > /etc/systemd/system/infinitemirror-landing.service <<'UNIT'
+[Unit]
+Description=InfiniteMirror landing page
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/infinitemirror/landing
+Environment=PORT=3002
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl enable --now infinitemirror-landing
+
 # --- Pomerium (self-hosted core, hosted authenticate, autocert) ---
 mkdir -p /etc/pomerium/autocert
 cat > /etc/pomerium/config.yaml <<CFG
 address: :443
 http_redirect_addr: :80
 authenticate_service_url: https://authenticate.pomerium.app
+jwt_claims_headers:
+  X-Pomerium-Claim-Email: email
 runtime_flags:
   mcp: true
 autocert: true
@@ -66,12 +85,8 @@ routes:
     prefix: /api/health
     allow_public_unauthenticated_access: true
   - from: https://${domain}
-    to: http://127.0.0.1:3000
-    policy:
-      - allow:
-          or:
-${allowed_emails}
-    pass_identity_headers: true
+    to: http://127.0.0.1:3002
+    allow_public_unauthenticated_access: true
   - from: https://dashboard.${domain}
     to: http://127.0.0.1:3000
     policy:

@@ -28,6 +28,26 @@ systemctl daemon-reload
 systemctl enable --now infinitemirror-mcp
 systemctl restart infinitemirror-mcp infinitemirror-dashboard
 
+# --- Landing page unit ---
+cat > /etc/systemd/system/infinitemirror-landing.service <<'UNIT'
+[Unit]
+Description=InfiniteMirror landing page
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/infinitemirror/landing
+Environment=PORT=3002
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now infinitemirror-landing
+systemctl restart infinitemirror-landing
+
 # --- Pomerium: ensure mcp runtime flag + MCP route ---
 python3 - <<'PY'
 cfg_path = "/etc/pomerium/config.yaml"
@@ -56,6 +76,13 @@ if "mcp.infinitemirror.masky.ai" not in cfg:
         "                is: seth@voicecert.com\n"
         "    pass_identity_headers: true\n")
     cfg = cfg.replace("routes:\n", route, 1)
+    changed = True
+
+if "jwt_claims_headers" not in cfg:
+    cfg = cfg.replace(
+        "authenticate_service_url: https://authenticate.pomerium.app",
+        "authenticate_service_url: https://authenticate.pomerium.app\njwt_claims_headers:\n  X-Pomerium-Claim-Email: email",
+        1)
     changed = True
 
 if "dashboard.infinitemirror.masky.ai" not in cfg:
@@ -91,6 +118,23 @@ if "nick@nickyt.co" not in cfg:
     anchor = "            - email:\n                is: rajvi.m7@gmail.com"
     cfg = cfg.replace(anchor, anchor + "\n            - email:\n                is: nick@nickyt.co")
     changed = True
+
+import re
+if "127.0.0.1:3002" not in cfg:
+    # apex catchall (gated dashboard) -> public landing; dashboard stays gated
+    # on dashboard.infinitemirror.masky.ai
+    pattern = re.compile(
+        r"  - from: https://infinitemirror\.masky\.ai\n"
+        r"    to: http://127\.0\.0\.1:3000\n"
+        r"    policy:.*?\n    pass_identity_headers: true\n",
+        re.DOTALL)
+    landing = ("  - from: https://infinitemirror.masky.ai\n"
+               "    to: http://127.0.0.1:3002\n"
+               "    allow_public_unauthenticated_access: true\n")
+    cfg, n = pattern.subn(landing, cfg, count=1)
+    if n:
+        changed = True
+        print("apex route -> public landing")
 
 if changed:
     open(cfg_path, "w").write(cfg)

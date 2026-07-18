@@ -1,0 +1,215 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 13 — The one line</title>
+    <!-- head is discarded by the runtime; everything lives inside <template> -->
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+          font-display: block;
+        }
+
+        /* Root: sized box, container for cqw units. No background here —
+           the full-bleed ground is a dedicated clip layer below. */
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          container-type: size;
+          overflow: hidden;
+        }
+
+        /* ── Ground clip: paper + permanent graph-paper grid + frame hairlines ── */
+        .f13-ground {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 0.06cqw, transparent 0.06cqw),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 0.06cqw, transparent 0.06cqw);
+          background-size: 2cqw 2cqw;
+        }
+        .f13-hairline {
+          position: absolute;
+          left: 4cqw;
+          right: 4cqw;
+          height: 0.12cqw;
+          background: #1f2be0;
+        }
+        .f13-hairline-top {
+          top: 3cqw;
+        }
+        .f13-hairline-bottom {
+          bottom: 3cqw;
+        }
+
+        /* ── Content clip: the quote + mirror hairline callback ── */
+        .f13-stage {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 0;
+          bottom: 16.7cqh; /* caption keep-out: content centers within the top 83% */
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .f13-quote {
+          max-width: 78cqw;
+          text-align: center;
+        }
+        .f13-line {
+          display: block;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 4.6cqw; /* fit-to-measure: 7+ words steps to headline size */
+          line-height: 1.05;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+        }
+        .f13-mirror {
+          display: block;
+          width: 0.42cqw;
+          height: 8.9cqh;
+          margin-top: 2.4cqw;
+          overflow: visible;
+        }
+        .f13-mirror path {
+          fill: none;
+          stroke-width: 2.4;
+          stroke-linecap: butt;
+        }
+        #f13-mirror-plane {
+          stroke: #1f2be0;
+        }
+        #f13-mirror-reflection {
+          stroke: rgba(31, 43, 224, 0.18);
+        }
+      </style>
+
+      <div id="root" data-composition-id="13-the-one-line" data-width="1920" data-height="1080" data-duration="4.331">
+        <!-- Ground layer: full-bleed clip, never a background on #root -->
+        <div
+          class="clip f13-ground"
+          id="f13-ground"
+          data-start="0"
+          data-duration="4.331"
+          data-track-index="0"
+        >
+          <div class="f13-hairline f13-hairline-top"></div>
+          <div class="f13-hairline f13-hairline-bottom"></div>
+        </div>
+
+        <!-- Content layer -->
+        <div
+          class="clip f13-stage"
+          id="f13-stage"
+          data-start="0"
+          data-duration="4.331"
+          data-track-index="1"
+        >
+          <div class="f13-quote">
+            <span class="f13-line" id="f13-line-1">Agents that own what they know&nbsp;&mdash;</span>
+            <span class="f13-line" id="f13-line-2">and sell what they can reason about.</span>
+          </div>
+          <!-- Mirror-plane callback: short vertical hairline, ink upper half,
+               ink-faint reflected lower half (Frames 2/3 geometry) -->
+          <svg
+            class="f13-mirror"
+            viewBox="0 0 4 96"
+            preserveAspectRatio="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path id="f13-mirror-plane" d="M 2 0 L 2 46" />
+            <path id="f13-mirror-reflection" d="M 2 50 L 2 96" />
+          </svg>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+
+          /* Timing — Scene windows scaled to the authoritative 4.331s duration
+             (draft 0–9.0s × 0.481):
+             Scene 1  0.00–1.25s : the ONE restrained move — quote slide-up
+                                   crossfade, then the mirror hairline draws.
+             Scene 2  1.25–4.331s: still hold. Nothing moves — the stillness
+                                   against the prior frames IS the beat. */
+
+          var LINE_SLIDE_DUR = 0.85; // slide-up crossfade per line
+          var LINE_1_START = 0.0; // hero visible well before t=0.5s
+          var LINE_2_START = 0.14; // near-simultaneous: reads as one move
+          var SLIDE_Y = 48; // px of upward travel
+          var PLANE_DRAW_DUR = 0.3; // mirror upper segment
+          var PLANE_DRAW_START = 0.8; // after the quote has largely settled
+          var REFLECT_DRAW_DUR = 0.24; // fainter reflected half
+          var REFLECT_DRAW_START = 1.02; // continuous pen: overlaps plane tail
+
+          // svg-path-draw: dash pattern from measured geometry, not magic numbers
+          var plane = document.getElementById("f13-mirror-plane");
+          var reflection = document.getElementById("f13-mirror-reflection");
+          [plane, reflection].forEach(function (p) {
+            var len = p.getTotalLength();
+            p.style.strokeDasharray = String(len);
+            p.style.strokeDashoffset = String(len);
+          });
+
+          var tl = gsap.timeline({ paused: true });
+
+          // Scene 1 — signature move: slide-up crossfade into place (power3 long-tail settle)
+          tl.fromTo(
+            "#f13-line-1",
+            { y: SLIDE_Y, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: LINE_SLIDE_DUR, ease: "power3.out" },
+            LINE_1_START
+          );
+          tl.fromTo(
+            "#f13-line-2",
+            { y: SLIDE_Y, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: LINE_SLIDE_DUR, ease: "power3.out" },
+            LINE_2_START
+          );
+
+          // Mirror hairline draws beneath — top-to-bottom, reflection continues
+          tl.fromTo(
+            plane,
+            { strokeDashoffset: plane.getTotalLength() },
+            {
+              strokeDashoffset: 0,
+              duration: PLANE_DRAW_DUR,
+              ease: "power2.out",
+            },
+            PLANE_DRAW_START
+          );
+          tl.fromTo(
+            reflection,
+            { strokeDashoffset: reflection.getTotalLength() },
+            {
+              strokeDashoffset: 0,
+              duration: REFLECT_DRAW_DUR,
+              ease: "power2.out",
+            },
+            REFLECT_DRAW_START
+          );
+
+          // Scene 2 — still hold to 4.331s: no jitter, no glow, no drift.
+
+          window.__timelines["13-the-one-line"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>InfiniteMirror — agents that own what they know</title>
+  <meta name="description" content="Agents ingest assets only they can access, reason over them, and sell that reasoning — with humans in the loop for the physical world. Scroll to fly through the world.">
+
+  <!-- Open Graph / social sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="InfiniteMirror">
+  <meta property="og:title" content="InfiniteMirror — agents that own what they know">
+  <meta property="og:description" content="Agents sell the reasoning, never the asset. Skill-routed orchestration on self-hosted GPUs, paid per thought, with humans in the loop for robots in the physical world. Scroll to fly through the world.">
+  <meta property="og:url" content="https://infinitemirror.masky.ai/">
+  <meta property="og:image" content="https://infinitemirror.masky.ai/assets/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="A human operator granting a session to a humanoid robot inside a glowing control ring">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="InfiniteMirror — agents that own what they know">
+  <meta name="twitter:description" content="Agents sell the reasoning, never the asset. Humans in the loop for robots at scale.">
+  <meta name="twitter:image" content="https://infinitemirror.masky.ai/assets/og.jpg">
+  <style>
+    :root, .sw-root {
+      --sw-bg: #0a0e12;
+      --sw-ink: #e8edf2;
+      --sw-ink-soft: #8b98a5;
+      --sw-accent: #66e0ff;
+      --sw-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    }
+    /* Dark-theme chrome corrections: the engine's pills (Admin button, top nav,
+       route-rail labels) are light surfaces — give them dark text/accent fills
+       so they read against our dark ink variable. */
+    .sw-topcta { color: #0a0e12; background: #66e0ff; }
+    .sw-nav__item { color: #26313b; }
+    .sw-nav__item:hover { color: #0a0e12; }
+    .sw-nav__item.is-active { color: #0a0e12; background: #66e0ff; }
+    .sw-route__label { color: #0a0e12; }
+    .sw-btn--primary { color: #0a0e12; background: #66e0ff; }
+  </style>
+</head>
+<body>
+  <div id="top"></div>
+  <div id="world"></div>
+
+  <script src="assets/scrub-engine.js"></script>
+  <script>
+    mountScrollWorld(document.getElementById('world'), {
+      brand: { name: 'InfiniteMirror', href: '#top' },
+      cta: { label: 'Admin', href: 'https://dashboard.infinitemirror.masky.ai' },
+      hint: 'scroll to fly in',
+      diveScroll: 1.3,
+      sections: [
+        {
+          id: 'mirror', label: 'The Mirror',
+          still: 'assets/scene_1.webp',
+          clip: 'assets/vid/leg_1.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'InfiniteMirror',
+          title: 'Agents that own what they know. And sell what they can reason about.',
+          body: 'Private data, fine-tuned weights, live machines — each held by exactly one agent, behind identity-checked glass. Buyers see the reasoning. Never the asset.',
+          tags: ['Private by construction', 'Reasoning as product'],
+        },
+        {
+          id: 'orchestrator', label: 'The Orchestrator',
+          still: 'assets/scene_2.webp',
+          clip: 'assets/vid/leg_2.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'The Orchestrator',
+          title: 'Agents that learn to talk to each other.',
+          body: 'Every delegation flows through a harness we own. An agent never asks another for work without knowing its skills — and every exchange becomes training data.',
+          tags: ['Skill-carded routing', 'Every hop traced', 'LoRA trained on us'],
+        },
+        {
+          id: 'foundry', label: 'The Foundry',
+          still: 'assets/scene_3.webp',
+          clip: 'assets/vid/leg_3.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'The Foundry',
+          title: 'Reasoning runs on metal we choose.',
+          body: 'Open-weight models on decentralized GPUs — leased by the hour, verified by health checks, replaceable by design.',
+          tags: ['Open weights', 'Akash GPUs', 'Self-hosted'],
+        },
+        {
+          id: 'marketplace', label: 'The Marketplace',
+          still: 'assets/scene_4.webp',
+          clip: 'assets/vid/leg_4.mp4',
+          accent: '#66e0ff',
+          eyebrow: 'The Marketplace',
+          title: 'Paid per thought.',
+          body: 'Each skill is an endpoint; each call carries its own payment. An agent discovers a capability, pays the challenge, and gets its answer.',
+          tags: ['x402 payments', 'zero.xyz discovery', 'Dynamic pricing'],
+        },
+        {
+          id: 'loop', label: 'Human in the loop',
+          still: 'assets/scene_5.webp',
+          clip: 'assets/vid/leg_5.mp4',
+          accent: '#66e0ff',
+          scroll: 1.6, linger: 0.45,
+          eyebrow: 'Human in the loop',
+          title: 'When robots come at scale, who holds the controls?',
+          body: 'Access is a session: granted to one verified identity, scoped to minutes or months, revoked in one click. The machine never has to guess who is at the keyboard.',
+          tags: ['Pomerium-gated', 'Session-scoped', 'Instantly revocable'],
+        },
+        {
+          id: 'enter', label: 'Enter',
+          still: 'assets/scene_6.webp',
+          clip: 'assets/vid/leg_6.mp4',
+          accent: '#66e0ff',
+          scroll: 1.6, linger: 0.4,
+          eyebrow: 'Enter the mirror',
+          title: 'The stack is live.',
+          body: 'Dashboard, orchestrator, GPU worker, MCP gateway — running now, gated by identity, priced per call.',
+          tags: [],
+          cta: { primary: { label: 'Enter the dashboard', href: 'https://dashboard.infinitemirror.masky.ai' },
+                 secondary: { label: 'Read the source', href: 'https://github.com/oceanseth/InfiniteMirror' } },
+        },
+      ],
+      connectors: [],
+      crossfade: 0.08,
+    });
+  </script>
+</body>
+</html>

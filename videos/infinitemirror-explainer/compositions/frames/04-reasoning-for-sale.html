@@ -1,0 +1,704 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Frame 4 — Reasoning for sale. Everything the runtime needs lives inside <template>. -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+          font-weight: 600;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+        }
+
+        /* ── Ground: paper + permanent graph grid + hairlines + top chrome ── */
+        .f04-ground {
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .f04-hairline {
+          position: absolute;
+          left: 76px;
+          right: 76px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .f04-hairline-top {
+          top: 57px;
+        }
+        .f04-hairline-bottom {
+          top: 1021px;
+        }
+        .f04-chrome {
+          position: absolute;
+          top: 26px;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+          text-transform: uppercase;
+        }
+        .f04-chrome-left {
+          left: 76px;
+        }
+        .f04-chrome-right {
+          right: 76px;
+        }
+
+        /* ── Stage ── */
+        .f04-stage-layer {
+          position: absolute;
+          inset: 0;
+        }
+
+        /* Full-stage diagram SVG (plane, rails, underline, flow dashes) */
+        .f04-diagram {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          pointer-events: none;
+        }
+
+        /* Ambient glow behind the mirror plane (Scene 4 single pulse) */
+        .f04-glow {
+          position: absolute;
+          left: 110px;
+          top: 300px;
+          width: 400px;
+          height: 590px;
+          background: radial-gradient(
+            closest-side,
+            rgba(31, 43, 224, 0.55),
+            rgba(31, 43, 224, 0) 72%
+          );
+          opacity: 0;
+          transform-origin: 50% 50%;
+          will-change: transform, opacity;
+          pointer-events: none;
+        }
+
+        /* Mirror-plane reflection sheen */
+        .f04-sheen {
+          position: absolute;
+          left: 303px;
+          top: 360px;
+          width: 26px;
+          height: 470px;
+          background: linear-gradient(to right, rgba(31, 43, 224, 0.14), rgba(31, 43, 224, 0));
+        }
+
+        /* Asset glyphs behind the plane (carried callback, dimmed) */
+        .f04-glyph {
+          position: absolute;
+          left: 158px;
+          width: 66px;
+          height: 74px;
+          opacity: 0.55;
+        }
+        .f04-glyph-doc {
+          top: 402px;
+        }
+        .f04-glyph-data {
+          top: 540px;
+        }
+        .f04-glyph-live {
+          top: 678px;
+        }
+
+        /* Agent / buyer nodes */
+        .f04-node {
+          position: absolute;
+          width: 70px;
+          height: 70px;
+          border: 2px solid #1f2be0;
+          background: #f0ebde;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 7px;
+          padding: 0 14px;
+          box-sizing: border-box;
+        }
+        .f04-node-bar {
+          height: 3px;
+          background: #1f2be0;
+        }
+        .f04-node-agent {
+          left: 415px;
+          top: 625px;
+        }
+        .f04-node-buyer {
+          left: 1555px;
+          top: 625px;
+        }
+        .f04-node-buyer .f04-node-inner {
+          margin: 0 auto;
+          width: 26px;
+          height: 26px;
+          border: 2px solid #1f2be0;
+        }
+        .f04-node-label {
+          position: absolute;
+          top: 707px;
+          width: 70px;
+          text-align: center;
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 13px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f04-label-agent {
+          left: 415px;
+        }
+        .f04-label-buyer {
+          left: 1555px;
+        }
+
+        /* Topbar — zero.xyz reasoning marketplace */
+        .f04-topbar {
+          position: absolute;
+          left: 480px;
+          top: 118px;
+          display: flex;
+          align-items: baseline;
+          gap: 28px;
+          will-change: transform, opacity;
+        }
+        .f04-topbar-name {
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 96px;
+          line-height: 0.95;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+        }
+        .f04-topbar-tag {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #5560e5;
+        }
+
+        /* Listing card (focal) — morphs from compact reasoning card to listing slot */
+        .f04-card {
+          position: absolute;
+          left: 760px;
+          top: 320px;
+          width: 320px;
+          height: 150px;
+          background: #e6e0ce;
+          border: 1.5px solid #1f2be0;
+          box-sizing: border-box;
+          overflow: hidden;
+          will-change: transform;
+        }
+        .f04-listing-frame {
+          position: absolute;
+          left: 750px;
+          top: 310px;
+          width: 640px;
+          height: 290px;
+          border: 1.5px solid #1f2be0;
+          box-sizing: border-box;
+          pointer-events: none;
+        }
+        .f04-card-old,
+        .f04-card-new {
+          position: absolute;
+          inset: 0;
+          padding: 24px 30px;
+          box-sizing: border-box;
+        }
+        .f04-mono-head {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f04-excerpt-bar {
+          height: 8px;
+          background: rgba(31, 43, 224, 0.18);
+          margin-top: 14px;
+        }
+        .f04-card-title {
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 34px;
+          line-height: 1.1;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+          margin-top: 12px;
+        }
+        .f04-price-row {
+          position: absolute;
+          left: 30px;
+          right: 30px;
+          bottom: 22px;
+          border-top: 1px solid rgba(31, 43, 224, 0.18);
+          padding-top: 16px;
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+        }
+        .f04-price-label {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 13px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f04-price-val {
+          display: inline-block;
+          font-family: "DM Mono", monospace;
+          font-size: 46px;
+          font-variant-numeric: tabular-nums;
+          letter-spacing: 0.02em;
+          color: #1f2be0;
+          transform-origin: right center;
+          will-change: transform;
+        }
+
+        /* x402 payment tag (travels buyer → agent along the payment rail) */
+        .f04-x402 {
+          position: absolute;
+          left: 560px;
+          top: 656px;
+          width: 96px;
+          height: 44px;
+          border: 2px solid #1f2be0;
+          background: #f0ebde;
+          box-sizing: border-box;
+          display: grid;
+          place-items: center;
+          font-family: "DM Mono", monospace;
+          font-size: 20px;
+          letter-spacing: 0.05em;
+          color: #1f2be0;
+          will-change: transform, opacity;
+        }
+
+        /* Reasoning-copy chip (travels agent → buyer on the return rail) */
+        .f04-chip {
+          position: absolute;
+          left: 505px;
+          top: 611px;
+          width: 48px;
+          height: 60px;
+          border: 2px solid #1f2be0;
+          background: #e6e0ce;
+          box-sizing: border-box;
+          padding: 9px 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          will-change: transform, opacity;
+        }
+        .f04-chip-line {
+          height: 3px;
+          background: rgba(31, 43, 224, 0.55);
+        }
+
+        /* Revenue counter beneath the agent node */
+        .f04-revenue {
+          position: absolute;
+          left: 320px;
+          top: 748px;
+          width: 260px;
+          text-align: center;
+          will-change: transform, opacity;
+        }
+        .f04-revenue-label {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 14px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f04-revenue-val {
+          display: inline-block;
+          margin-top: 8px;
+          font-family: "DM Mono", monospace;
+          font-size: 40px;
+          font-variant-numeric: tabular-nums;
+          color: #1f2be0;
+          transform-origin: center top;
+          will-change: transform;
+        }
+      </style>
+
+      <div id="root" data-composition-id="04-reasoning-for-sale" data-width="1920" data-height="1080">
+        <!-- Ground: full-bleed paper + grid + hairlines (never on #root itself) -->
+        <div
+          id="f04-ground"
+          class="clip f04-ground"
+          data-start="0"
+          data-duration="11.349"
+          data-track-index="0"
+        >
+          <div class="f04-hairline f04-hairline-top"></div>
+          <div class="f04-hairline f04-hairline-bottom"></div>
+          <div class="f04-chrome f04-chrome-left">Infinitemirror &mdash; field report</div>
+          <div class="f04-chrome f04-chrome-right">004</div>
+        </div>
+
+        <!-- Stage: the marketplace shot -->
+        <div
+          id="f04-stage"
+          class="clip f04-stage-layer"
+          data-start="0"
+          data-duration="11.349"
+          data-track-index="1"
+        >
+          <!-- Glow BEHIND the plane (DOM order keeps it under the diagram) -->
+          <div class="f04-glow" id="f04-glow"></div>
+
+          <!-- Full-stage diagram strokes -->
+          <svg class="f04-diagram" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <!-- Mirror plane (carried from Frame 3, compact at left) — static at t0 -->
+            <path id="f04-plane" d="M 300 360 L 300 830" stroke="#1F2BE0" stroke-width="3" fill="none" />
+            <!-- Topbar underline — draws on cue -->
+            <path
+              id="f04-underline"
+              d="M 480 250 L 1844 250"
+              stroke="#1F2BE0"
+              stroke-width="2"
+              fill="none"
+            />
+            <!-- Payment rail: buyer → agent (path starts at buyer so it draws from the buyer) -->
+            <path
+              id="f04-rail-pay"
+              d="M 1540 678 L 500 678"
+              stroke="rgba(31,43,224,0.18)"
+              stroke-width="2.5"
+              fill="none"
+            />
+            <!-- Return rail: agent → buyer -->
+            <path
+              id="f04-rail-ret"
+              d="M 500 642 L 1540 642"
+              stroke="rgba(31,43,224,0.18)"
+              stroke-width="2.5"
+              fill="none"
+            />
+            <!-- Dash-flow overlays (svg-icon-enrichment, finite, then hold static) -->
+            <path
+              id="f04-flow-pay"
+              d="M 1540 678 L 500 678"
+              stroke="#1F2BE0"
+              stroke-width="2.5"
+              stroke-dasharray="12 10"
+              stroke-linecap="butt"
+              fill="none"
+            />
+            <path
+              id="f04-flow-ret"
+              d="M 500 642 L 1540 642"
+              stroke="#1F2BE0"
+              stroke-width="2.5"
+              stroke-dasharray="12 10"
+              stroke-linecap="butt"
+              fill="none"
+            />
+          </svg>
+
+          <!-- Plane sheen -->
+          <div class="f04-sheen"></div>
+
+          <!-- Asset glyphs behind (left of) the plane — square language, no circles -->
+          <svg class="f04-glyph f04-glyph-doc" viewBox="0 0 66 74" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 8 4 L 44 4 L 58 18 L 58 70 L 8 70 Z" stroke="#1F2BE0" stroke-width="3" fill="none" />
+            <path d="M 44 4 L 44 18 L 58 18" stroke="#1F2BE0" stroke-width="3" fill="none" />
+            <path d="M 18 32 L 48 32 M 18 44 L 48 44 M 18 56 L 40 56" stroke="#1F2BE0" stroke-width="3" fill="none" />
+          </svg>
+          <svg class="f04-glyph f04-glyph-data" viewBox="0 0 66 74" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="6" width="50" height="18" stroke="#1F2BE0" stroke-width="3" fill="none" />
+            <rect x="8" y="28" width="50" height="18" stroke="#1F2BE0" stroke-width="3" fill="none" />
+            <rect x="8" y="50" width="50" height="18" stroke="#1F2BE0" stroke-width="3" fill="none" />
+            <path d="M 14 15 L 22 15 M 14 37 L 22 37 M 14 59 L 22 59" stroke="#1F2BE0" stroke-width="3" fill="none" />
+          </svg>
+          <svg class="f04-glyph f04-glyph-live" viewBox="0 0 66 74" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="10" width="54" height="54" stroke="#1F2BE0" stroke-width="3" fill="none" />
+            <path d="M 12 40 L 22 40 L 22 26 L 34 26 L 34 50 L 44 50 L 44 40 L 54 40" stroke="#1F2BE0" stroke-width="3" fill="none" />
+          </svg>
+
+          <!-- Agent + buyer nodes -->
+          <div class="f04-node f04-node-agent">
+            <div class="f04-node-bar"></div>
+            <div class="f04-node-bar"></div>
+            <div class="f04-node-bar"></div>
+          </div>
+          <div class="f04-node f04-node-buyer">
+            <div class="f04-node-inner"></div>
+          </div>
+          <div class="f04-node-label f04-label-agent">Agent</div>
+          <div class="f04-node-label f04-label-buyer">Buyer</div>
+
+          <!-- Topbar -->
+          <div class="f04-topbar" id="f04-topbar">
+            <div class="f04-topbar-name">zero.xyz</div>
+            <div class="f04-topbar-tag">Reasoning marketplace</div>
+          </div>
+
+          <!-- Listing frame (the grown listing border) — before the card in DOM, sits under it -->
+          <div class="f04-listing-frame" id="f04-listing-frame"></div>
+
+          <!-- The reasoning card → listing card (focal, card-morph-anchor) -->
+          <div class="f04-card" id="f04-card">
+            <div class="f04-card-old" id="f04-card-old">
+              <div class="f04-mono-head">Reasoning &middot; AGT-04</div>
+              <div class="f04-excerpt-bar" style="width: 200px"></div>
+              <div class="f04-excerpt-bar" style="width: 236px"></div>
+              <div class="f04-excerpt-bar" style="width: 164px"></div>
+            </div>
+            <div class="f04-card-new" id="f04-card-new">
+              <div class="f04-mono-head">Listing 004 &middot; AGT-04</div>
+              <div class="f04-card-title">Agent reasoning</div>
+              <div class="f04-price-row">
+                <div class="f04-price-label">Price / request</div>
+                <span class="f04-price-val" id="f04-price-val">$0.010</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- x402 payment tag -->
+          <div class="f04-x402" id="f04-x402">x402</div>
+
+          <!-- Reasoning-copy chip -->
+          <div class="f04-chip" id="f04-chip">
+            <div class="f04-chip-line"></div>
+            <div class="f04-chip-line"></div>
+            <div class="f04-chip-line" style="width: 70%"></div>
+          </div>
+
+          <!-- Revenue counter -->
+          <div class="f04-revenue" id="f04-revenue">
+            <div class="f04-revenue-label">Revenue</div>
+            <span class="f04-revenue-val" id="f04-revenue-val">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+        (function () {
+          var ID = "04-reasoning-for-sale";
+
+          // svg-path-draw setup: dasharray/dashoffset = measured length (invisible until drawn)
+          ["f04-underline", "f04-rail-pay", "f04-rail-ret"].forEach(function (id) {
+            var p = document.getElementById(id);
+            var len = p.getTotalLength();
+            p.style.strokeDasharray = String(len);
+            p.style.strokeDashoffset = String(len);
+          });
+
+          var tl = gsap.timeline({ paused: true });
+
+          /* ───────── Scene 1 (0 – 3.03): stage carried in, topbar draws, card lifts into listing ───────── */
+          // Stage cluster (plane, glyphs, nodes, compact card) is carried in at rest — visible at t0.
+
+          // Topbar title settles on "listed and sold on zero.xyz"
+          tl.fromTo(
+            "#f04-topbar",
+            { y: 26, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.6, ease: "power3.out" },
+            0.3
+          );
+          // Topbar underline self-draws (svg-path-draw)
+          tl.to("#f04-underline", { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" }, 0.55);
+
+          // card-morph-anchor: compact reasoning card lifts into the listing slot,
+          // growing a price field + listing border. One tween morphs travel + dimensions.
+          tl.fromTo(
+            "#f04-card",
+            { x: -250, y: 230, width: 320, height: 150 },
+            { x: 0, y: 0, width: 620, height: 270, duration: 1.25, ease: "power3.inOut" },
+            1.1
+          );
+          // Old content fades during the first ~40% of the morph
+          tl.fromTo(
+            "#f04-card-old",
+            { autoAlpha: 1 },
+            { autoAlpha: 0, duration: 0.5, ease: "power1.in" },
+            1.1
+          );
+          // New (listing) content fades in during the last ~40%
+          tl.fromTo(
+            "#f04-card-new",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.5, ease: "power1.out" },
+            1.85
+          );
+          // The grown listing border lands as the morph settles
+          tl.fromTo(
+            "#f04-listing-frame",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.45, ease: "power1.out" },
+            1.95
+          );
+
+          /* ───────── Scene 2 (3.03 – 6.24): price ticks; x402 pays buyer → agent ───────── */
+          // counting-dynamic-scale on the price field ("priced dynamically")
+          var price = { v: 0.01 };
+          var priceEl = document.getElementById("f04-price-val");
+          tl.to(
+            price,
+            {
+              v: 0.038,
+              duration: 1.5,
+              ease: "power3.out",
+              onUpdate: function () {
+                priceEl.textContent = "$" + price.v.toFixed(3);
+              },
+            },
+            3.25
+          );
+          tl.fromTo(
+            "#f04-price-val",
+            { scale: 0.82 },
+            { scale: 1, duration: 1.5, ease: "power3.out" },
+            3.25
+          );
+
+          // Payment rail draws from the buyer toward the agent (svg-path-draw)
+          tl.to("#f04-rail-pay", { strokeDashoffset: 0, duration: 0.55, ease: "power2.out" }, 4.65);
+
+          // x402 tag appears at the buyer and travels the rail to the agent
+          tl.fromTo(
+            "#f04-x402",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.3, ease: "power1.out" },
+            4.95
+          );
+          tl.fromTo(
+            "#f04-x402",
+            { x: 880 },
+            { x: 0, duration: 1.3, ease: "power3.inOut" },
+            4.95
+          );
+          // Dash-flow along the payment rail (finite pass, then holds static)
+          tl.fromTo(
+            "#f04-flow-pay",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.3, ease: "power1.out" },
+            4.95
+          );
+          tl.to(
+            "#f04-flow-pay",
+            { strokeDashoffset: -132, duration: 1.55, ease: "none" },
+            4.95
+          );
+
+          /* ───────── Scene 3 (6.24 – 9.08): revenue counts up; reasoning copy returns to buyer ───────── */
+          tl.fromTo(
+            "#f04-revenue",
+            { y: 18, autoAlpha: 0 },
+            { y: 0, autoAlpha: 1, duration: 0.5, ease: "power3.out" },
+            6.7
+          );
+          var rev = { v: 0 };
+          var revEl = document.getElementById("f04-revenue-val");
+          tl.to(
+            rev,
+            {
+              v: 2.47,
+              duration: 1.5,
+              ease: "power3.out",
+              onUpdate: function () {
+                revEl.textContent = "$" + rev.v.toFixed(2);
+              },
+            },
+            6.85
+          );
+          tl.fromTo(
+            "#f04-revenue-val",
+            { scale: 0.85 },
+            { scale: 1, duration: 1.5, ease: "power3.out" },
+            6.85
+          );
+
+          // Return rail draws agent → buyer
+          tl.to("#f04-rail-ret", { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" }, 7.3);
+
+          // Reasoning-copy chip travels agent → buyer and docks there
+          tl.fromTo(
+            "#f04-chip",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.3, ease: "power1.out" },
+            7.6
+          );
+          tl.fromTo(
+            "#f04-chip",
+            { x: 0 },
+            { x: 935, duration: 1.3, ease: "power3.inOut" },
+            7.65
+          );
+          // Dash-flow on the return rail (finite, then static)
+          tl.fromTo(
+            "#f04-flow-ret",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 0.3, ease: "power1.out" },
+            7.65
+          );
+          tl.to(
+            "#f04-flow-ret",
+            { strokeDashoffset: -132, duration: 1.45, ease: "none" },
+            7.65
+          );
+
+          /* ───────── Scene 4 (9.08 – 11.35): the mirror plane pulses once — boundary held; still hold ───────── */
+          // ambient-glow-bloom, pulse-on-arrival form: bloom up once, settle to a low hold. No loop.
+          tl.fromTo(
+            "#f04-glow",
+            { opacity: 0, scale: 0.94 },
+            { opacity: 0.32, scale: 1, duration: 0.55, ease: "power2.out" },
+            9.35
+          );
+          tl.to("#f04-glow", { opacity: 0.12, duration: 0.9, ease: "power2.inOut" }, 9.95);
+          // Held read to end — no exit (the root transition is the exit).
+
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,437 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 01 — Agents learn nothing</title>
+    <!-- head is source-file metadata only; the runtime clones ONLY <template> contents -->
+  </head>
+  <body>
+    <template>
+      <style>
+        /* ── Fonts (shipped files only) ─────────────────────────────── */
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        /* ── Root (styled via #root, never a class) ─────────────────── */
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          container-type: size;
+        }
+
+        /* ── Ground: paper + permanent graph grid + hairlines (clip) ── */
+        .bg-ground {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .hairline {
+          position: absolute;
+          left: 77px;
+          right: 77px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .hair-top {
+          top: 58px;
+        }
+        .hair-bottom {
+          top: 1022px;
+        }
+
+        /* ── Supporting ambient: agent dots + message web, 3 depth layers ── */
+        .web-wrap {
+          position: absolute;
+          inset: 0;
+        }
+        .web-layer {
+          position: absolute;
+          inset: 0;
+          --dof: 0px;
+          filter: blur(var(--dof));
+          will-change: filter;
+        }
+        .web-layer svg {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        .msg {
+          fill: none;
+          stroke-linecap: butt;
+        }
+        .layer-a .msg {
+          stroke: rgba(31, 43, 224, 0.22);
+          stroke-width: 2;
+        }
+        .layer-b .msg {
+          stroke: rgba(31, 43, 224, 0.18);
+          stroke-width: 1.6;
+        }
+        .layer-c .msg {
+          stroke: rgba(31, 43, 224, 0.15);
+          stroke-width: 1.2;
+        }
+        .dot {
+          opacity: 0;
+        }
+        .layer-a .dot {
+          fill: rgba(31, 43, 224, 0.4);
+        }
+        .layer-b .dot {
+          fill: rgba(31, 43, 224, 0.32);
+        }
+        .layer-c .dot {
+          fill: rgba(31, 43, 224, 0.26);
+        }
+
+        /* ── Foreground: kinetic type stage (clip) ──────────────────── */
+        .stage {
+          position: absolute;
+          inset: 0;
+        }
+        .kicker {
+          position: absolute;
+          left: 77px;
+          top: 28px;
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          color: #1f2be0;
+          opacity: 0;
+        }
+        /* Hero band: centered at y ≈ 0.42 × 1080 = 454 (height 908 → center 454) */
+        .hero {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1920px;
+          height: 908px;
+          display: grid;
+          place-items: center;
+        }
+        .line {
+          grid-area: 1 / 1;
+          text-align: center;
+          color: #1f2be0;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+        }
+        /* Beat 1 — headline, 7 words → two rows (no <br>) */
+        .line-1 {
+          font-size: 88px;
+          line-height: 1.12;
+          letter-spacing: -0.005em;
+        }
+        .w1w {
+          display: inline-block;
+          will-change: transform, opacity;
+        }
+        /* Beat 2 — "thousands" at vbig-numeral scale */
+        .line-2,
+        .line-3 {
+          opacity: 0;
+          visibility: hidden;
+        }
+        .big-word {
+          font-size: 240px;
+          line-height: 0.9;
+          letter-spacing: -0.015em;
+        }
+        .sub-word {
+          font-size: 76px;
+          line-height: 1;
+          letter-spacing: -0.005em;
+          margin-top: 20px;
+        }
+        /* Beat 3 — payoff line (hero of the frame, fit-to-measure single line) */
+        .payoff {
+          font-size: 116px;
+          line-height: 1;
+          letter-spacing: -0.005em;
+          white-space: nowrap;
+        }
+        .kw {
+          display: inline-block;
+          will-change: transform, text-shadow;
+        }
+        .settle,
+        .jitter {
+          display: block;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="01-agents-learn-nothing"
+        data-width="1920"
+        data-height="1080"
+        data-duration="7.796"
+      >
+        <!-- Track 0 — full-bleed ground (never painted on #root) -->
+        <div class="bg-ground clip" data-start="0" data-duration="7.796" data-track-index="0">
+          <div class="hairline hair-top"></div>
+          <div class="hairline hair-bottom"></div>
+        </div>
+
+        <!-- Track 1 — supporting ambient message web (3 depth layers) -->
+        <div class="web-wrap clip" data-start="0" data-duration="7.796" data-track-index="1">
+          <!-- near plane -->
+          <div class="web-layer layer-a" id="f01aln-webA" data-depth="1">
+            <svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+              <line class="msg" data-t="0.60" data-d="0.55" x1="250" y1="210" x2="1670" y2="260" />
+              <line class="msg" data-t="0.95" data-d="0.55" x1="330" y1="780" x2="1590" y2="760" />
+              <line class="msg" data-t="2.15" data-d="0.45" x1="250" y1="210" x2="330" y2="780" />
+              <line class="msg" data-t="2.51" data-d="0.45" x1="1670" y1="260" x2="1590" y2="760" />
+              <rect class="dot" data-t="0.35" x="246.5" y="206.5" width="7" height="7" />
+              <rect class="dot" data-t="0.47" x="1666.5" y="256.5" width="7" height="7" />
+              <rect class="dot" data-t="0.59" x="326.5" y="776.5" width="7" height="7" />
+              <rect class="dot" data-t="0.71" x="1586.5" y="756.5" width="7" height="7" />
+            </svg>
+          </div>
+          <!-- mid plane -->
+          <div class="web-layer layer-b" id="f01aln-webB" data-depth="2">
+            <svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+              <line class="msg" data-t="1.30" data-d="0.55" x1="520" y1="140" x2="170" y2="520" />
+              <line class="msg" data-t="2.33" data-d="0.45" x1="1400" y1="120" x2="1740" y2="540" />
+              <line class="msg" data-t="2.69" data-d="0.45" x1="520" y1="140" x2="1400" y2="120" />
+              <line class="msg" data-t="3.05" data-d="0.45" x1="170" y1="520" x2="1740" y2="540" />
+              <rect class="dot" data-t="0.55" x="517" y="137" width="6" height="6" />
+              <rect class="dot" data-t="0.67" x="1397" y="117" width="6" height="6" />
+              <rect class="dot" data-t="0.79" x="167" y="517" width="6" height="6" />
+              <rect class="dot" data-t="0.91" x="1737" y="537" width="6" height="6" />
+            </svg>
+          </div>
+          <!-- far plane -->
+          <div class="web-layer layer-c" id="f01aln-webC" data-depth="3">
+            <svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+              <line class="msg" data-t="1.65" data-d="0.55" x1="820" y1="90" x2="90" y2="300" />
+              <line class="msg" data-t="2.87" data-d="0.45" x1="820" y1="90" x2="1830" y2="340" />
+              <line class="msg" data-t="3.23" data-d="0.45" x1="1830" y1="340" x2="1150" y2="840" />
+              <line class="msg" data-t="3.41" data-d="0.45" x1="90" y1="300" x2="960" y2="700" />
+              <rect class="dot" data-t="0.75" x="817.5" y="87.5" width="5" height="5" />
+              <rect class="dot" data-t="0.87" x="87.5" y="297.5" width="5" height="5" />
+              <rect class="dot" data-t="0.99" x="1827.5" y="337.5" width="5" height="5" />
+              <rect class="dot" data-t="1.11" x="1147.5" y="837.5" width="5" height="5" />
+              <rect class="dot" data-t="1.23" x="957.5" y="697.5" width="5" height="5" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Track 2 — kinetic type beats -->
+        <div class="stage clip" data-start="0" data-duration="7.796" data-track-index="2">
+          <div class="kicker" id="f01aln-kicker">001 · AGENT-TO-AGENT TRAFFIC</div>
+          <div class="hero">
+            <!-- Beat 1 -->
+            <div class="line line-1" id="f01aln-line1">
+              <div class="lrow">
+                <span class="w1w">AI</span> <span class="w1w">agents</span>
+                <span class="w1w">already</span>
+              </div>
+              <div class="lrow">
+                <span class="w1w">talk</span> <span class="w1w">to</span>
+                <span class="w1w">each</span> <span class="w1w">other</span>
+              </div>
+            </div>
+            <!-- Beat 2 (hard-cut swap) -->
+            <div class="line line-2" id="f01aln-line2">
+              <div class="settle" id="f01aln-l2settle">
+                <div class="big-word">thousands</div>
+                <div class="sub-word">of times a day</div>
+              </div>
+            </div>
+            <!-- Beat 3 (hard-cut swap → payoff, held) -->
+            <div class="line line-3" id="f01aln-line3">
+              <div class="settle" id="f01aln-l3settle">
+                <div class="jitter payoff" id="f01aln-jitter">
+                  <span>they learn</span> <span class="kw" id="f01aln-kw">nothing</span>
+                  <span>from it</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          var ID = "01-agents-learn-nothing";
+          var SCOPE = document.querySelector('[data-composition-id="' + ID + '"]');
+
+          /* Scene windows: storyboard drafted 0–9.0s, real duration 7.296s
+             → scale 0.8107. S1 0–2.11 · S2 2.11–3.89 · S3 3.89–6.16 · S4 6.16–7.296 */
+          var SWAP1 = 2.11; /* "thousands of times a day" spoken */
+          var SWAP2 = 3.89; /* "here's the problem…" → payoff line */
+          var GLOW_START = 5.4; /* "nothing" spoken */
+          var GLOW_END = 6.1;
+          var JITTER_START = 6.3;
+          var END = 7.296;
+
+          var tl = gsap.timeline({ paused: true });
+
+          /* ── Scene 1: per-word staggered reveal (dynamic-content-sequencing) ── */
+          var kicker = SCOPE.querySelector("#f01aln-kicker");
+          tl.fromTo(
+            kicker,
+            { autoAlpha: 0, y: 8 },
+            { autoAlpha: 1, y: 0, duration: 0.6, ease: "power3.out" },
+            0.25
+          );
+
+          var words = SCOPE.querySelectorAll(".w1w");
+          words.forEach(function (w, i) {
+            tl.fromTo(
+              w,
+              { autoAlpha: 0, y: 26 },
+              { autoAlpha: 1, y: 0, duration: 0.65, ease: "power3.out" },
+              0.12 + i * 0.11
+            );
+          });
+
+          /* Message web: measure + prime each hairline (svg-path-draw) */
+          var msgs = SCOPE.querySelectorAll(".msg");
+          msgs.forEach(function (p) {
+            var len = p.getTotalLength();
+            p.style.strokeDasharray = String(len);
+            p.style.strokeDashoffset = String(len);
+            tl.to(
+              p,
+              {
+                strokeDashoffset: 0,
+                duration: parseFloat(p.dataset.d),
+                ease: "power2.out",
+              },
+              parseFloat(p.dataset.t)
+            );
+          });
+
+          /* Agent dots sprout (sequential, never random) */
+          var dots = SCOPE.querySelectorAll(".dot");
+          dots.forEach(function (d) {
+            tl.fromTo(
+              d,
+              { opacity: 0, scale: 0.5, transformOrigin: "50% 50%" },
+              { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" },
+              parseFloat(d.dataset.t)
+            );
+          });
+
+          /* ── Scene 2: hard-cut swap (discrete-text-sequence mechanics) ── */
+          var line1 = SCOPE.querySelector("#f01aln-line1");
+          var line2 = SCOPE.querySelector("#f01aln-line2");
+          var line3 = SCOPE.querySelector("#f01aln-line3");
+
+          tl.set(line1, { autoAlpha: 0 }, SWAP1);
+          tl.set(line2, { autoAlpha: 1 }, SWAP1);
+          tl.fromTo(
+            SCOPE.querySelector("#f01aln-l2settle"),
+            { scale: 1.05 },
+            { scale: 1, duration: 0.8, ease: "power3.out", immediateRender: false },
+            SWAP1
+          );
+
+          /* ── Scene 3: hard-cut swap to the payoff line ── */
+          tl.set(line2, { autoAlpha: 0 }, SWAP2);
+          tl.set(line3, { autoAlpha: 1 }, SWAP2);
+          tl.fromTo(
+            SCOPE.querySelector("#f01aln-l3settle"),
+            { scale: 1.05 },
+            { scale: 1, duration: 0.9, ease: "power3.out", immediateRender: false },
+            SWAP2
+          );
+
+          /* Web freezes: dim + defocus the supporting planes (depth-of-field-blur) */
+          ["#f01aln-webA", "#f01aln-webB", "#f01aln-webC"].forEach(function (sel) {
+            var el = SCOPE.querySelector(sel);
+            var depth = Number(el.dataset.depth) || 1;
+            tl.to(
+              el,
+              {
+                "--dof": depth * 3 + "px",
+                opacity: 0.5,
+                duration: 0.85,
+                ease: "power2.inOut",
+              },
+              SWAP2 + 0.03
+            );
+          });
+
+          /* Keyword glow on "nothing" (asr-keyword-glow envelope: attack→sustain→release→rest) */
+          var kw = SCOPE.querySelector("#f01aln-kw");
+          var MAX_BLUR = 24;
+          var MAX_SCALE_BOOST = 0.08;
+          var REST_LEVEL = 0.25;
+          function applyGlow(env) {
+            kw.style.textShadow =
+              "0 0 " + (MAX_BLUR * env).toFixed(2) + "px rgba(31,43,224," + (0.15 + 0.6 * env).toFixed(3) + ")";
+            kw.style.transform = "scale(" + (1 + MAX_SCALE_BOOST * env).toFixed(4) + ")";
+          }
+          var glow = { v: 0 };
+          tl.to(
+            glow,
+            {
+              v: 1,
+              duration: 0.2,
+              ease: "none",
+              onUpdate: function () {
+                applyGlow(glow.v);
+              },
+            },
+            GLOW_START
+          );
+          tl.to(
+            glow,
+            {
+              v: REST_LEVEL,
+              duration: 0.45,
+              ease: "power1.out",
+              onUpdate: function () {
+                applyGlow(glow.v);
+              },
+            },
+            GLOW_END
+          );
+
+          /* ── Scene 4: held read — subtle jitter on the payoff only (sine-wave-loop, low amp) ── */
+          var jit = SCOPE.querySelector("#f01aln-jitter");
+          var phase = { p: 0 };
+          tl.to(
+            phase,
+            {
+              p: Math.PI * 2,
+              duration: END - JITTER_START,
+              ease: "none",
+              onUpdate: function () {
+                var y = Math.sin(phase.p) * 1.4 + Math.sin(phase.p * 2.3) * 0.6;
+                jit.style.transform = "translateY(" + y.toFixed(3) + "px)";
+              },
+            },
+            JITTER_START
+          );
+
+          window.__timelines[ID] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

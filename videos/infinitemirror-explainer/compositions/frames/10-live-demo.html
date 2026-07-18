@@ -1,0 +1,437 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 10 — Live demo</title>
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "DM Mono";
+          font-weight: 400;
+          font-style: normal;
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          font-weight: 600;
+          font-style: normal;
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+        }
+
+        /* Root — sized box; ground painted on the bg clip, never here */
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+        }
+
+        /* ---- Ground clip: paper + graph grid + hairlines (full-bleed furniture) ---- */
+        .bg {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .hairline {
+          position: absolute;
+          left: 77px;
+          width: 1766px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .hairline.top {
+          top: 58px;
+        }
+        .hairline.bottom {
+          top: 1020px;
+        }
+
+        /* ---- Stage clip ---- */
+        .stage {
+          position: absolute;
+          inset: 0;
+        }
+
+        /* Window hero — square corners, cobalt hairline border, no shadow */
+        .window-wrap {
+          position: absolute;
+          left: 388px;
+          top: 102px;
+          width: 1144px;
+          height: 656px;
+          will-change: transform, filter, opacity;
+        }
+        .window {
+          position: absolute;
+          inset: 0;
+          border: 2px solid #1f2be0;
+          background: #f0ebde;
+        }
+        .titlebar {
+          position: relative;
+          width: 1140px;
+          height: 46px;
+          background: #e6e0ce;
+          border-bottom: 2px solid #1f2be0;
+        }
+        .tb-squares {
+          position: absolute;
+          left: 16px;
+          top: 18px;
+          display: flex;
+          gap: 7px;
+        }
+        .tb-squares span {
+          display: block;
+          width: 9px;
+          height: 9px;
+          background: rgba(31, 43, 224, 0.18);
+        }
+        .tb-title {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 0;
+          height: 44px;
+          line-height: 44px;
+          text-align: center;
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+        }
+        .tb-live {
+          position: absolute;
+          right: 16px;
+          top: 0;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 13px;
+          letter-spacing: 0.16em;
+          color: #1f2be0;
+        }
+        .tb-live i {
+          display: block;
+          width: 8px;
+          height: 8px;
+          background: #1f2be0;
+        }
+
+        /* Camera viewport over the screenshot */
+        .viewport {
+          position: relative;
+          width: 1140px;
+          height: 606px;
+          overflow: hidden;
+          background: #0a0a12;
+        }
+        .zoom-outer {
+          position: absolute;
+          inset: 0;
+          transform-origin: 50% 50%;
+          will-change: transform;
+        }
+        .zoom-inner {
+          position: absolute;
+          inset: 0;
+          will-change: transform;
+        }
+        .world {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1140px;
+          height: 606px;
+        }
+        .world img {
+          display: block;
+          width: 1140px;
+          height: 606px;
+        }
+
+        /* Marker callouts — square-corner drawn rects (Cobalt Grid: zero radius) */
+        .marker {
+          position: absolute;
+          border: 3px solid #5560e5;
+          will-change: transform, opacity;
+        }
+        #f10-m1 {
+          left: 258px;
+          top: 76px;
+          width: 544px;
+          height: 214px;
+        }
+        #f10-m2 {
+          left: 258px;
+          top: 291px;
+          width: 544px;
+          height: 310px;
+        }
+        #f10-m3 {
+          left: 3px;
+          top: 237px;
+          width: 260px;
+          height: 347px;
+        }
+        .chip {
+          position: absolute;
+          padding: 6px 10px;
+          background: #f0ebde;
+          border: 2px solid #1f2be0;
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          color: #1f2be0;
+          white-space: nowrap;
+          will-change: transform, opacity;
+        }
+        #f10-c1 {
+          left: 268px;
+          top: 60px;
+        }
+        #f10-c2 {
+          left: 268px;
+          top: 275px;
+        }
+        #f10-c3 {
+          left: 13px;
+          top: 221px;
+        }
+
+        /* URL payoff beneath the window */
+        .url-row {
+          position: absolute;
+          left: 0;
+          top: 786px;
+          width: 1920px;
+          display: flex;
+          justify-content: center;
+        }
+        .url-pill {
+          display: flex;
+          align-items: center;
+          height: 58px;
+          padding: 0 30px;
+          border: 2px solid #1f2be0;
+          background: #e6e0ce;
+          font-family: "DM Mono", monospace;
+          font-size: 27px;
+          letter-spacing: 0.04em;
+          color: #1f2be0;
+          will-change: transform, opacity;
+        }
+        .url-seg {
+          display: inline-block;
+          will-change: transform, opacity;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="10-live-demo"
+        data-width="1920"
+        data-height="1080"
+        data-duration="11.913"
+      >
+        <!-- Ground: paper + grid + hairlines -->
+        <div
+          class="clip bg"
+          data-start="0"
+          data-duration="11.913"
+          data-track-index="0"
+        >
+          <div class="hairline top"></div>
+          <div class="hairline bottom"></div>
+        </div>
+
+        <!-- Stage: window hero + callouts + URL -->
+        <div
+          class="clip stage"
+          data-start="0"
+          data-duration="11.913"
+          data-track-index="1"
+        >
+          <div class="window-wrap" id="f10-window-wrap">
+            <div class="window">
+              <div class="titlebar">
+                <div class="tb-squares"><span></span><span></span><span></span></div>
+                <div class="tb-title">dashboard.infinitemirror.masky.ai</div>
+                <div class="tb-live"><i></i>LIVE</div>
+              </div>
+              <div class="viewport">
+                <div class="zoom-outer" id="f10-zoom-outer">
+                  <div class="zoom-inner" id="f10-zoom-inner" data-layout-allow-overflow>
+                    <div class="world" data-layout-allow-overflow>
+                      <img
+                        id="f10-dashboard-img"
+                        src="public/dashboard-preview.png"
+                        alt=""
+                      />
+                      <div class="marker" id="f10-m1"></div>
+                      <div class="marker" id="f10-m2"></div>
+                      <div class="marker" id="f10-m3"></div>
+                      <div class="chip" id="f10-c1">01 · ORCHESTRATOR CHAT</div>
+                      <div class="chip" id="f10-c2">02 · A2A TWIN SIMULATOR</div>
+                      <div class="chip" id="f10-c3">03 · X402 DYNAMIC PRICING</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="url-row">
+            <div class="url-pill" id="f10-url">
+              <span class="url-seg">infinitemirror</span><span class="url-seg">.</span><span class="url-seg">masky</span><span class="url-seg">.</span><span class="url-seg">ai</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          var tl = gsap.timeline({ paused: true });
+
+          /* ---- Camera math (coordinate-target-zoom, fixed-px geometry) ----
+             Screenshot source 2000x1063 rendered at 1140x606 (K = 0.57).
+             Outer wrapper scales, inner wrapper counter-translates: T = -offset,
+             cover-clamped so the screenshot never exposes the viewport edge. */
+          var VW = 1140,
+            VH = 606,
+            K = VW / 2000;
+
+          function targetT(cxSrc, cySrc, S) {
+            var tx = VW / 2 - cxSrc * K;
+            var ty = VH / 2 - cySrc * K;
+            var mx = (VW / 2) * (1 - 1 / S);
+            var my = (VH / 2) * (1 - 1 / S);
+            return {
+              x: Math.max(-mx, Math.min(mx, tx)),
+              y: Math.max(-my, Math.min(my, ty)),
+            };
+          }
+
+          // Panel centers in source-image px (measured from dashboard-preview.png)
+          var CHAT = targetT(930, 320, 1.5); // Orchestrator Chat panel
+          var SIM = targetT(930, 794, 1.5); // A2A simulator panel
+          var PRICE = targetT(219, 720, 1.7); // Dynamic Pricing Rules panel
+
+          var outer = "#f10-zoom-outer",
+            inner = "#f10-zoom-inner";
+
+          // Scale + counter-translate always share duration + ease
+          function camera(t, S, T, dur, ease) {
+            tl.to(outer, { scale: S, duration: dur, ease: ease }, t);
+            tl.to(inner, { x: T.x, y: T.y, duration: dur, ease: ease }, t);
+          }
+
+          function markerIn(t, m, c) {
+            tl.fromTo(
+              m,
+              { scale: 0.55, opacity: 0, rotation: 0 },
+              {
+                scale: 1,
+                opacity: 1,
+                rotation: -1.2,
+                duration: 0.5,
+                ease: "power3.out",
+                transformOrigin: "50% 50%",
+              },
+              t
+            );
+            tl.fromTo(
+              c,
+              { y: 10, opacity: 0 },
+              { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" },
+              t + 0.1
+            );
+          }
+
+          /* Scene 1 (0-2.45) — "It's running today":
+             window arrives via INVERSE zoom-through (arriving-at seam):
+             oversized -> retracts into focal plane, full-frame blur 20px. */
+          tl.fromTo(
+            "#f10-window-wrap",
+            { scale: 1.22, opacity: 0.15, filter: "blur(20px)" },
+            {
+              scale: 1,
+              opacity: 1,
+              filter: "blur(0px)",
+              duration: 0.75,
+              ease: "expo.out",
+            },
+            0.08
+          );
+
+          /* Scene 2 (2.45-8.3) — three VO-cued callouts, velocity-matched pushes */
+          // "orchestrator chat"
+          camera(2.3, 1.5, CHAT, 1.0, "power2.inOut");
+          markerIn(2.7, "#f10-m1", "#f10-c1");
+
+          // "agent-to-agent twin simulator"
+          tl.to(
+            ["#f10-m1", "#f10-c1"],
+            { opacity: 0.4, duration: 0.5, ease: "power2.out" },
+            4.1
+          );
+          camera(4.1, 1.5, SIM, 0.95, "power2.inOut");
+          markerIn(4.55, "#f10-m2", "#f10-c2");
+
+          // "x402 dynamic pricing"
+          tl.to(
+            ["#f10-m2", "#f10-c2"],
+            { opacity: 0.4, duration: 0.5, ease: "power2.out" },
+            6.1
+          );
+          camera(6.1, 1.7, PRICE, 0.95, "power2.inOut");
+          markerIn(6.55, "#f10-m3", "#f10-c3");
+
+          /* Scene 3 (8.3-10.1) — "live at…": pull back to the full window,
+             all three markers re-light, URL lands per-word beneath. */
+          camera(8.3, 1.0, { x: 0, y: 0 }, 0.95, "power3.inOut");
+          tl.to(
+            ["#f10-m1", "#f10-c1", "#f10-m2", "#f10-c2"],
+            { opacity: 1, duration: 0.6, ease: "power2.out" },
+            8.45
+          );
+
+          tl.fromTo(
+            "#f10-url",
+            { y: 16, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" },
+            8.85
+          );
+          tl.fromTo(
+            ".url-seg",
+            { x: 26, opacity: 0 },
+            {
+              x: 0,
+              opacity: 1,
+              duration: 0.42,
+              ease: "power3.out",
+              stagger: 0.1,
+            },
+            9.0
+          );
+
+          /* Scene 4 (10.1-11.413) — held read, still. */
+
+          window.__timelines["10-live-demo"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

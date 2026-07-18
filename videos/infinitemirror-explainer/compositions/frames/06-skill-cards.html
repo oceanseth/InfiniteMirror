@@ -1,0 +1,616 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Frame 6 — Skill cards. Everything the runtime needs lives inside <template>. -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+          font-weight: 600;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+        }
+
+        /* ── Ground: paper + permanent graph grid + hairlines (full-bleed clip) ── */
+        .f06-bg {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 0 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 0 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .f06-hairline {
+          position: absolute;
+          left: 77px;
+          right: 77px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .f06-hair-top {
+          top: 56px;
+        }
+        .f06-hair-bottom {
+          top: 1022px;
+        }
+        .f06-chrome {
+          position: absolute;
+          top: 24px;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+          opacity: 0.8;
+        }
+        .f06-chrome-l {
+          left: 77px;
+        }
+        .f06-chrome-r {
+          right: 77px;
+        }
+        .f06-vstack {
+          position: absolute;
+          right: 40px;
+          top: 240px;
+          writing-mode: vertical-rl;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.3em;
+          color: #1f2be0;
+          opacity: 0.45;
+          text-transform: uppercase;
+        }
+
+        /* ── Stage clip ── */
+        .f06-stage {
+          position: absolute;
+          inset: 0;
+          perspective: 1800px;
+        }
+
+        /* carried hub furniture — dimmed background stage */
+        .f06-dim {
+          position: absolute;
+          inset: 0;
+          opacity: 0.55;
+        }
+        .f06-dof {
+          --dof: 0px;
+          filter: blur(var(--dof));
+          will-change: filter;
+        }
+        .f06-spokes {
+          position: absolute;
+          inset: 0;
+        }
+        .f06-spokes line {
+          stroke: #1f2be0;
+          stroke-width: 2;
+        }
+        .f06-iring {
+          position: absolute;
+          left: 505px;
+          top: 405px;
+          width: 190px;
+          height: 190px;
+          border: 2px dashed #1f2be0;
+        }
+        .f06-hub {
+          position: absolute;
+          left: 540px;
+          top: 440px;
+          width: 120px;
+          height: 120px;
+          background: #f0ebde;
+          border: 2px solid #1f2be0;
+          display: grid;
+          place-items: center;
+        }
+        .f06-hub-label {
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+          text-align: center;
+        }
+        .f06-agent {
+          position: absolute;
+          width: 64px;
+          height: 64px;
+        }
+        .f06-agent-box {
+          width: 64px;
+          height: 64px;
+          background: #f0ebde;
+          border: 2px solid #1f2be0;
+          display: grid;
+          place-items: center;
+        }
+        .f06-agent-glyph {
+          width: 18px;
+          height: 18px;
+          background: #1f2be0;
+        }
+        .f06-agent-name {
+          position: absolute;
+          left: -18px;
+          top: 70px;
+          width: 100px;
+          text-align: center;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+        }
+
+        /* the one agent that flips (full opacity — it becomes the card) */
+        .f06-a0 {
+          position: absolute;
+          left: 818px;
+          top: 468px;
+          width: 64px;
+          height: 64px;
+          z-index: 3;
+          transform-style: preserve-3d;
+        }
+
+        /* ── Skill card (foreground subject) ── */
+        .f06-card {
+          position: absolute;
+          left: 880px;
+          top: 230px;
+          width: 560px;
+          height: 520px;
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          box-shadow: 0 0 0 3px #f0ebde; /* anti-shadow paper outset, not elevation */
+          padding: 30px 34px;
+          z-index: 4;
+          transform-style: preserve-3d;
+          will-change: transform;
+        }
+        .f06-card-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          padding-bottom: 16px;
+          border-bottom: 2px solid #1f2be0;
+        }
+        .f06-card-kicker {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-size: 16px;
+          font-weight: 600;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f06-card-tag {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          color: #1f2be0;
+        }
+        .f06-srow {
+          position: relative;
+          display: grid;
+          grid-template-columns: 56px 1fr 56px;
+          align-items: center;
+          column-gap: 12px;
+          padding: 21px 0;
+          border-bottom: 1px solid rgba(31, 43, 224, 0.18);
+        }
+        .f06-srow-num {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          color: #1f2be0;
+          position: relative;
+          z-index: 1;
+        }
+        .f06-srow-mid {
+          position: relative;
+          z-index: 1;
+        }
+        .f06-srow-name {
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 36px;
+          line-height: 1.1;
+          color: #1f2be0;
+        }
+        .f06-srow-desc {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 400;
+          font-size: 19px;
+          line-height: 1.4;
+          color: #1f2be0;
+          opacity: 0.7;
+        }
+        .f06-hl-bar {
+          position: absolute;
+          top: 6px;
+          bottom: 6px;
+          left: -10px;
+          right: -10px;
+          background: rgba(31, 43, 224, 0.14);
+          z-index: 0;
+        }
+        .f06-stamp {
+          position: absolute;
+          right: 0;
+          top: 50%;
+          margin-top: -22px;
+          width: 44px;
+          height: 44px;
+          border: 2px solid #1f2be0;
+          background: #f0ebde;
+          z-index: 1;
+        }
+        .f06-stamp svg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
+        .f06-stamp path {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 4;
+          stroke-linecap: square;
+        }
+
+        /* ── Router pill ── */
+        .f06-pill {
+          position: absolute;
+          left: 400px;
+          top: 174px;
+          width: 400px;
+          height: 72px;
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          box-shadow: 0 0 0 3px #f0ebde;
+          display: flex;
+          align-items: center;
+          padding-left: 24px;
+          z-index: 5;
+        }
+        .f06-pill-tag {
+          position: absolute;
+          left: 16px;
+          top: -11px;
+          padding: 0 8px;
+          background: #f0ebde;
+          font-family: "Hanken Grotesk", sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f06-pill-line {
+          display: flex;
+          align-items: baseline;
+          font-family: "DM Mono", monospace;
+          font-size: 27px;
+          letter-spacing: 0.05em;
+          white-space: pre;
+        }
+        .f06-pill-prompt {
+          color: #1f2be0;
+          opacity: 0.6;
+        }
+        .f06-pill-text {
+          color: #1f2be0;
+          white-space: pre;
+        }
+        .f06-caret {
+          display: inline-block;
+          width: 15px;
+          height: 30px;
+          margin-left: 5px;
+          background: #5560e5;
+          vertical-align: -5px;
+        }
+
+        /* ── Delegation line ── */
+        .f06-dsvg {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+        }
+        .f06-dsvg path {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 3;
+          stroke-linecap: square;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="06-skill-cards"
+        data-width="1920"
+        data-height="1080"
+        data-duration="11.401"
+      >
+        <!-- Ground clip: paper + grid + hairlines + chrome (never on #root) -->
+        <div class="clip f06-bg" data-start="0" data-duration="11.401" data-track-index="0">
+          <div class="f06-hairline f06-hair-top"></div>
+          <div class="f06-hairline f06-hair-bottom"></div>
+          <div class="f06-chrome f06-chrome-l">INFINITEMIRROR</div>
+          <div class="f06-chrome f06-chrome-r">06 / SKILL CARDS</div>
+          <div class="f06-vstack">capability registry — 06</div>
+        </div>
+
+        <!-- Stage clip -->
+        <div class="clip f06-stage" data-start="0" data-duration="11.401" data-track-index="1">
+          <!-- Carried hub stage (Frame 5 geometry), dimmed background -->
+          <div class="f06-dim">
+            <svg class="f06-spokes f06-dof" viewBox="0 0 1920 1080">
+              <line x1="600" y1="500" x2="850" y2="500"></line>
+              <line x1="600" y1="500" x2="725" y2="716"></line>
+              <line x1="600" y1="500" x2="475" y2="716"></line>
+              <line x1="600" y1="500" x2="350" y2="500"></line>
+              <line x1="600" y1="500" x2="475" y2="284"></line>
+              <line x1="600" y1="500" x2="725" y2="284"></line>
+            </svg>
+            <div class="f06-iring f06-dof"></div>
+            <div class="f06-agent f06-dof" style="left: 693px; top: 684px">
+              <div class="f06-agent-box"><div class="f06-agent-glyph"></div></div>
+              <div class="f06-agent-name">A-04</div>
+            </div>
+            <div class="f06-agent f06-dof" style="left: 443px; top: 684px">
+              <div class="f06-agent-box"><div class="f06-agent-glyph"></div></div>
+              <div class="f06-agent-name">A-05</div>
+            </div>
+            <div class="f06-agent f06-dof" style="left: 318px; top: 468px">
+              <div class="f06-agent-box"><div class="f06-agent-glyph"></div></div>
+              <div class="f06-agent-name">A-06</div>
+            </div>
+            <div class="f06-agent f06-dof" style="left: 443px; top: 252px">
+              <div class="f06-agent-box"><div class="f06-agent-glyph"></div></div>
+              <div class="f06-agent-name">A-01</div>
+            </div>
+            <div class="f06-agent f06-dof" style="left: 693px; top: 252px">
+              <div class="f06-agent-box"><div class="f06-agent-glyph"></div></div>
+              <div class="f06-agent-name">A-02</div>
+            </div>
+            <div class="f06-hub">
+              <div class="f06-hub-label">ORCHESTRATOR</div>
+            </div>
+          </div>
+
+          <!-- Delegation line: hub → the chosen agent's card (Scene 3 payoff) -->
+          <svg class="f06-dsvg" viewBox="0 0 1920 1080">
+            <path id="f06-dline" d="M 664 500 L 884 500"></path>
+          </svg>
+
+          <!-- The agent node that flips (full opacity) -->
+          <div class="f06-a0" id="f06-a0">
+            <div class="f06-agent-box"><div class="f06-agent-glyph"></div></div>
+            <div class="f06-agent-name">A-03</div>
+          </div>
+
+          <!-- Skill card: ledger-row layout, revealed by the flip -->
+          <div class="f06-card" id="f06-card">
+            <div class="f06-card-head">
+              <div class="f06-card-kicker">Skill card</div>
+              <div class="f06-card-tag">AGENT / A-03</div>
+            </div>
+            <div class="f06-srow" id="f06-row1">
+              <div class="f06-srow-num">001</div>
+              <div class="f06-srow-mid">
+                <div class="f06-srow-name">summarize</div>
+                <div class="f06-srow-desc">condense long documents</div>
+              </div>
+              <div></div>
+            </div>
+            <div class="f06-srow" id="f06-row2">
+              <div class="f06-hl-bar" id="f06-hl"></div>
+              <div class="f06-srow-num">002</div>
+              <div class="f06-srow-mid">
+                <div class="f06-srow-name">translate</div>
+                <div class="f06-srow-desc">convert between languages</div>
+              </div>
+              <div class="f06-stamp" id="f06-stamp">
+                <svg viewBox="0 0 44 44">
+                  <path id="f06-check" d="M 11 23 L 19 31 L 33 13"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="f06-srow" id="f06-row3">
+              <div class="f06-srow-num">003</div>
+              <div class="f06-srow-mid">
+                <div class="f06-srow-name">extract</div>
+                <div class="f06-srow-desc">pull entities from text</div>
+              </div>
+              <div></div>
+            </div>
+          </div>
+
+          <!-- Router pill: names the needed skill BEFORE picking -->
+          <div class="f06-pill" id="f06-pill">
+            <div class="f06-pill-tag">Router</div>
+            <div class="f06-pill-line">
+              <span class="f06-pill-prompt">skill: </span><span
+                class="f06-pill-text"
+                id="f06-typed"
+              ></span><span class="f06-caret" id="f06-caret"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+        (function () {
+          var DUR = 10.901;
+          var tl = gsap.timeline({ paused: true });
+
+          /* svg-path-draw setup: measure real lengths, hide via dashoffset */
+          var dline = document.getElementById("f06-dline");
+          var dlen = dline.getTotalLength();
+          dline.style.strokeDasharray = String(dlen);
+          dline.style.strokeDashoffset = String(dlen);
+          var check = document.getElementById("f06-check");
+          var clen = check.getTotalLength();
+          check.style.strokeDasharray = String(clen);
+          check.style.strokeDashoffset = String(clen);
+
+          /* ── Scene 1 (VO 0.13–2.84 "Every agent publishes a skill card") ── */
+          /* cue "agent" (0.48): the publishing node marks itself */
+          tl.to(
+            "#f06-a0",
+            { scale: 1.12, duration: 0.18, ease: "power2.out", yoyo: true, repeat: 1 },
+            0.5
+          );
+          /* cue "publishes" (0.96): node flips away in 3D (split-tilt single-card register) */
+          tl.to("#f06-a0", { rotationY: 88, duration: 0.28, ease: "power2.in" }, 0.96);
+          tl.set("#f06-a0", { opacity: 0 }, 1.24);
+          /* the card swings open from the hub side, settles at a slight 3D tilt */
+          tl.fromTo(
+            "#f06-card",
+            { rotationY: -75, opacity: 0, transformOrigin: "left center" },
+            { rotationY: -12, opacity: 1, duration: 0.8, ease: "power3.out" },
+            1.15
+          );
+          /* cue "skill card." (2.25–2.84): ledger rows reveal sequentially */
+          tl.fromTo(
+            "#f06-row1",
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" },
+            2.0
+          );
+          tl.fromTo(
+            "#f06-row2",
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" },
+            2.35
+          );
+          tl.fromTo(
+            "#f06-row3",
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" },
+            2.7
+          );
+
+          /* ── Scene 2 (VO 2.97–7.98 "Before the router delegates… must name the skill") ── */
+          /* cue "Before the router" (2.97): router pill docks above the hub */
+          tl.fromTo(
+            "#f06-pill",
+            { opacity: 0, y: -36 },
+            { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+            3.0
+          );
+
+          /* cue "must name the skill" (5.25): discrete-text-sequence typing behind a
+             context-sensitive caret — deterministic driver, stateless per-frame lookup */
+          var SEQ = [
+            { t: 0.0, text: "" },
+            { t: 5.25, text: "t" },
+            { t: 5.4, text: "tr" },
+            { t: 5.54, text: "tra" },
+            { t: 5.7, text: "tran" },
+            { t: 5.84, text: "trans" },
+            { t: 6.3, text: "transl" },
+            { t: 6.44, text: "transla" },
+            { t: 6.58, text: "translat" },
+            { t: 6.72, text: "translate" },
+          ];
+          function entryAt(time) {
+            for (var i = SEQ.length - 1; i >= 0; i--) {
+              if (time >= SEQ[i].t) return SEQ[i];
+            }
+            return SEQ[0];
+          }
+          var typedEl = document.getElementById("f06-typed");
+          var caretEl = document.getElementById("f06-caret");
+          var BLINK_CYCLES = 15; /* whole number → sin sweep ends on a cycle boundary */
+          var drv = { t: 0 };
+          tl.to(
+            drv,
+            {
+              t: DUR,
+              duration: DUR,
+              ease: "none",
+              onUpdate: function () {
+                var e = entryAt(drv.t);
+                typedEl.textContent = e.text;
+                /* segment-aware caret: idle = ink-soft, typing/typed = full ink */
+                caretEl.style.background = e.text === "" ? "#5560E5" : "#1F2BE0";
+                /* solid while a keystroke just landed, sin blink otherwise (stateless) */
+                var isTyping = e.t > 0 && drv.t - e.t < 0.25;
+                var blinkOn =
+                  Math.sin((2 * Math.PI * BLINK_CYCLES * drv.t) / DUR) > 0;
+                caretEl.style.opacity = isTyping || blinkOn ? "1" : "0";
+              },
+            },
+            0
+          );
+
+          /* ── Scene 3 (VO 8.11–10.98 "only pick an agent whose card lists it") ── */
+          /* cue "only pick" (8.56): marker sweep on the matching row */
+          tl.fromTo(
+            "#f06-hl",
+            { scaleX: 0, transformOrigin: "left center" },
+            { scaleX: 1, duration: 0.5, ease: "power2.out" },
+            8.6
+          );
+          /* cue "whose card" (9.74 lead-in): the rest of the ring blurs back (DoF) */
+          var dof = gsap.utils.toArray(".f06-dof");
+          dof.forEach(function (el) {
+            tl.to(
+              el,
+              { "--dof": "4px", opacity: 0.45, duration: 0.7, ease: "power2.inOut" },
+              9.25
+            );
+          });
+          /* delegation line snaps hub → the listed agent's card */
+          tl.to("#f06-dline", { strokeDashoffset: 0, duration: 0.3, ease: "power2.out" }, 9.5);
+
+          /* ── Scene 4 (cue "lists it." 10.29): check stamps the row, then held read ── */
+          tl.fromTo(
+            "#f06-stamp",
+            { opacity: 0, scale: 1.6 },
+            { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" },
+            10.15
+          );
+          tl.to("#f06-check", { strokeDashoffset: 0, duration: 0.3, ease: "power2.out" }, 10.3);
+
+          window.__timelines["06-skill-cards"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

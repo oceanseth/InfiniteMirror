@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Frame 2 — Introducing InfiniteMirror. Everything the runtime needs lives inside <template>. -->
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        /* Root styled via #root only (scoper drops root-class rules). */
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          container-type: size;
+        }
+
+        /* ---- Ground (full-bleed clip, NOT the root) ---- */
+        .im2-bg {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .im2-hairline {
+          position: absolute;
+          left: 77px;
+          right: 77px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .im2-hairline-top {
+          top: 58px;
+        }
+        .im2-hairline-bottom {
+          bottom: 58px;
+        }
+
+        /* ---- Stage ---- */
+        .im2-stage {
+          position: absolute;
+          inset: 0;
+          font-family: "Hanken Grotesk", sans-serif;
+        }
+
+        /* Mirror-plane hairline overlay (draws through the wordmark seam) */
+        .im2-plane-svg {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          pointer-events: none;
+        }
+
+        /* Wordmark lockup — seam at exact canvas center x=960 */
+        .im2-lockup {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 338px;
+          height: 140px;
+        }
+        .im2-jitter {
+          position: absolute;
+          inset: 0;
+          will-change: transform;
+        }
+        .im2-word {
+          position: absolute;
+          top: 0;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 130px;
+          line-height: 1;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+          white-space: nowrap;
+          will-change: transform, opacity;
+        }
+        .im2-word-infinite {
+          right: calc(50% + 20px);
+        }
+        .im2-word-mirror {
+          left: calc(50% + 20px);
+        }
+        /* The reflection ghost: mirrored "Infinite" right of the plane, ink at faint opacity.
+           CSS transform only — GSAP touches opacity alone on this element. */
+        .im2-ghost {
+          left: calc(50% + 20px);
+          transform: scaleX(-1);
+          transform-origin: 50% 50%;
+        }
+
+        .im2-subtag {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 516px;
+          text-align: center;
+          font-family: "DM Mono", monospace;
+          font-weight: 400;
+          font-size: 21px;
+          letter-spacing: 0.32em;
+          padding-left: 0.32em;
+          text-transform: uppercase;
+          color: #1f2be0;
+          will-change: transform, opacity;
+        }
+
+        /* ---- Idea pills (square-cornered cards — 0 radius everywhere) ---- */
+        .im2-pill-row {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 622px;
+          display: flex;
+          justify-content: center;
+          gap: 56px;
+        }
+        .im2-pill {
+          display: flex;
+          align-items: center;
+          gap: 26px;
+          padding: 28px 36px;
+          background: #e6e0ce;
+          border: 1px solid rgba(31, 43, 224, 0.18);
+          transform-origin: 50% 50%;
+          will-change: transform, opacity;
+        }
+        .im2-pill-num {
+          font-family: "DM Mono", monospace;
+          font-size: 16px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+          align-self: flex-start;
+        }
+        .im2-pill-glyph {
+          width: 46px;
+          height: 46px;
+          flex: 0 0 auto;
+        }
+        .im2-pill-glyph path {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 2.6;
+          stroke-linecap: square;
+          stroke-linejoin: miter;
+        }
+        .im2-pill-text {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 400;
+          font-size: 27px;
+          line-height: 1.35;
+          color: #1f2be0;
+          max-width: 330px;
+        }
+        .im2-glow {
+          display: inline-block;
+          will-change: transform, text-shadow;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="02-introducing-infinitemirror"
+        data-width="1920"
+        data-height="1080"
+        data-duration="10.975"
+      >
+        <!-- Full-bleed ground on its own clip (never on the root) -->
+        <div
+          class="clip im2-bg"
+          data-start="0"
+          data-duration="10.975"
+          data-track-index="0"
+        >
+          <div class="im2-hairline im2-hairline-top"></div>
+          <div class="im2-hairline im2-hairline-bottom"></div>
+        </div>
+
+        <!-- Content stage -->
+        <div
+          class="clip im2-stage"
+          data-start="0"
+          data-duration="10.975"
+          data-track-index="1"
+        >
+          <!-- Mirror plane hairline: self-draws through the wordmark's center -->
+          <svg class="im2-plane-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <line
+              id="im2-mirror-line"
+              x1="960"
+              y1="295"
+              x2="960"
+              y2="492"
+              stroke="#1f2be0"
+              stroke-width="2.4"
+            />
+            <line
+              id="im2-echo"
+              x1="967"
+              y1="295"
+              x2="967"
+              y2="492"
+              stroke="rgba(31,43,224,0.18)"
+              stroke-width="2"
+            />
+          </svg>
+
+          <div class="im2-lockup">
+            <div class="im2-jitter" id="im2-jitter">
+              <div class="im2-word im2-word-infinite" id="im2-word-infinite">Infinite</div>
+              <div class="im2-word im2-ghost" id="im2-ghost">Infinite</div>
+              <div class="im2-word im2-word-mirror" id="im2-word-mirror">Mirror</div>
+            </div>
+          </div>
+
+          <div class="im2-subtag" id="im2-subtag">an agent economy</div>
+
+          <div class="im2-pill-row">
+            <div class="im2-pill" id="im2-pill-1">
+              <div class="im2-pill-num">01</div>
+              <svg class="im2-pill-glyph" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path id="im2-lock-shackle" d="M15 21 v-5 a9 9 0 0 1 18 0 v5" />
+                <path id="im2-lock-body" d="M11 21 h26 v18 h-26 z" />
+                <path id="im2-lock-key" d="M24 28 v5" />
+              </svg>
+              <div class="im2-pill-text">agents own what they know</div>
+            </div>
+            <div class="im2-pill" id="im2-pill-2">
+              <div class="im2-pill-num">02</div>
+              <svg class="im2-pill-glyph" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path id="im2-loop-arc" d="M40 24 A16 16 0 1 1 35.3 12.7" />
+                <path id="im2-loop-head" d="M36.6 6.2 L35.3 12.7 L28.8 13.6" />
+              </svg>
+              <div class="im2-pill-text">
+                every conversation makes the system
+                <span class="im2-glow" id="im2-smarter">smarter</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          window.__timelines = window.__timelines || {};
+          var tl = gsap.timeline({ paused: true });
+
+          // ---- svg-path-draw setup: measure each stroked path, hide via dashoffset ----
+          var drawIds = [
+            "im2-mirror-line",
+            "im2-lock-shackle",
+            "im2-lock-body",
+            "im2-lock-key",
+            "im2-loop-arc",
+            "im2-loop-head",
+          ];
+          drawIds.forEach(function (id) {
+            var p = document.getElementById(id);
+            if (!p) return;
+            var len = p.getTotalLength ? p.getTotalLength() : 300;
+            p.style.strokeDasharray = String(len);
+            p.style.strokeDashoffset = String(len);
+          });
+
+          /* ============================================================
+             Scene 1 (0 – 2.62s) — the name locks up, literally reflected
+             ============================================================ */
+          // "Infinite" arrives (per-word staggered reveal, word 1)
+          tl.fromTo(
+            "#im2-word-infinite",
+            { opacity: 0, y: 26 },
+            { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" },
+            0.1
+          );
+          // Vertical mirror hairline self-draws through the wordmark's center
+          tl.to(
+            "#im2-mirror-line",
+            { strokeDashoffset: 0, duration: 0.6, ease: "power2.out" },
+            0.45
+          );
+          // The reflection appears right of the plane at ink-faint (opacity only —
+          // this element keeps its CSS scaleX(-1))
+          tl.fromTo(
+            "#im2-ghost",
+            { opacity: 0 },
+            { opacity: 0.22, duration: 0.4, ease: "power1.out" },
+            0.85
+          );
+          // Faint echo hairline (the plane's own reflection)
+          tl.to(
+            "#im2-echo",
+            { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" },
+            1.1
+          );
+          // The reflection resolves into the word "Mirror" (within-scene swap)
+          tl.to("#im2-ghost", { opacity: 0, duration: 0.45, ease: "power1.in" }, 1.4);
+          tl.fromTo(
+            "#im2-word-mirror",
+            { opacity: 0, x: 26 },
+            { opacity: 1, x: 0, duration: 0.65, ease: "expo.out" },
+            1.45
+          );
+          // mono-tag beneath, on the "agent economy" cue
+          tl.fromTo(
+            "#im2-subtag",
+            { opacity: 0, y: 14 },
+            { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+            1.95
+          );
+
+          /* ============================================================
+             Scene 2 (2.62 – 5.94s) — "agents own what they know"
+             ============================================================ */
+          // Idea-pill 1: spring-pop entrance, smooth long-tail settle (no overshoot)
+          tl.fromTo(
+            "#im2-pill-1",
+            { scale: 0, opacity: 0, y: 24 },
+            { scale: 1, opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+            2.8
+          );
+          // Padlock glyph self-draws after the card seats
+          tl.to(
+            "#im2-lock-shackle",
+            { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" },
+            3.4
+          );
+          tl.to(
+            "#im2-lock-body",
+            { strokeDashoffset: 0, duration: 0.45, ease: "power2.out" },
+            3.78
+          );
+          tl.to(
+            "#im2-lock-key",
+            { strokeDashoffset: 0, duration: 0.25, ease: "power2.out" },
+            4.16
+          );
+
+          /* ============================================================
+             Scene 3 (5.94 – 9.25s) — "every conversation … smarter"
+             ============================================================ */
+          // Idea-pill 2: velocity-matched pair (same distance, duration, ease)
+          tl.fromTo(
+            "#im2-pill-2",
+            { scale: 0, opacity: 0, y: 24 },
+            { scale: 1, opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+            6.05
+          );
+          // Loop-arrow glyph self-draws
+          tl.to(
+            "#im2-loop-arc",
+            { strokeDashoffset: 0, duration: 0.6, ease: "power2.out" },
+            6.6
+          );
+          tl.to(
+            "#im2-loop-head",
+            { strokeDashoffset: 0, duration: 0.3, ease: "power2.out" },
+            7.12
+          );
+
+          /* ============================================================
+             Driver — asr-keyword-glow on "smarter" + Scene 4 subtle jitter
+             (single linear driver; pure function of t → deterministic)
+             ============================================================ */
+          var DUR = 10.475;
+          // Glow envelope (attack–sustain–release–rest), timed to the spoken word
+          var G_START = 8.55;
+          var G_END = 9.15;
+          var ATTACK = 0.18;
+          var RELEASE = 0.35;
+          var REST = 0.25;
+          var MAX_BLUR = 20;
+          var MAX_SCALE = 0.09;
+          // Wordmark jitter (sine-wave-loop, low amplitude; sin(0)=0 → no jump)
+          var J_START = 9.3;
+          var J_PERIOD = 1.7;
+          var J_AMP = 2.2;
+
+          var glowEl = document.getElementById("im2-smarter");
+          var jitterEl = document.getElementById("im2-jitter");
+
+          function env(t) {
+            var relEnd = G_END + RELEASE;
+            if (t < G_START) return 0;
+            if (t < G_END) return Math.min((t - G_START) / ATTACK, 1);
+            if (t < relEnd) return 1 - ((t - G_END) / RELEASE) * (1 - REST);
+            return REST;
+          }
+
+          var driver = { t: 0 };
+          tl.to(
+            driver,
+            {
+              t: DUR,
+              duration: DUR,
+              ease: "none",
+              onUpdate: function () {
+                var t = driver.t;
+                // keyword glow
+                var e = env(t);
+                glowEl.style.textShadow =
+                  "0 0 " + (MAX_BLUR * e).toFixed(2) + "px rgba(31,43,224," +
+                  (0.15 + 0.55 * e).toFixed(3) + ")";
+                glowEl.style.transform = "scale(" + (1 + MAX_SCALE * e).toFixed(4) + ")";
+                // held-read jitter on the wordmark only
+                var jt = t - J_START;
+                var y = jt > 0 ? Math.sin((jt / J_PERIOD) * Math.PI * 2) * J_AMP : 0;
+                jitterEl.style.transform = "translateY(" + y.toFixed(3) + "px)";
+              },
+            },
+            0
+          );
+
+          window.__timelines["02-introducing-infinitemirror"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

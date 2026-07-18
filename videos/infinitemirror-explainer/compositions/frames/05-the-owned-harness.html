@@ -1,0 +1,501 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 05 — The owned harness</title>
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+          font-weight: 600;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-display: block;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+        }
+
+        /* ── ground: paper + permanent graph grid + hairlines + mono chrome ── */
+        .f05-bg {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1.5px, transparent 1.5px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1.5px, transparent 1.5px);
+          background-size: 38.4px 38.4px;
+        }
+        .f05-hairline {
+          position: absolute;
+          left: 77px;
+          right: 77px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .f05-hairline-top { top: 57px; }
+        .f05-hairline-bot { bottom: 57px; }
+        .f05-chrome {
+          position: absolute;
+          top: 30px;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+        }
+        .f05-chrome-left { left: 77px; }
+        .f05-chrome-right { right: 77px; }
+        .f05-vstack {
+          position: absolute;
+          right: 34px;
+          top: 440px;
+          writing-mode: vertical-rl;
+          font-family: "DM Mono", monospace;
+          font-size: 11px;
+          letter-spacing: 0.22em;
+          color: rgba(31, 43, 224, 0.4);
+        }
+
+        /* ── stage ── */
+        .f05-stage {
+          position: absolute;
+          inset: 0;
+        }
+        .f05-camera {
+          position: absolute;
+          inset: 0;
+          transform-origin: 960px 545px;
+          perspective: 1800px;
+          will-change: transform;
+        }
+
+        /* kicker — "Now the part that compounds." (storyboard-specified opener) */
+        .f05-kicker {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 424px;
+          text-align: center;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 46px;
+          line-height: 1.05;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+          z-index: 6;
+          will-change: transform;
+        }
+        .f05-kicker .f05-kw {
+          display: inline-block;
+          will-change: transform, opacity;
+        }
+
+        /* spoke / pulse / instrumentation-ring layer */
+        .f05-net {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+        }
+
+        /* six agent nodes on the ring */
+        .f05-node {
+          position: absolute;
+          width: 120px;
+          height: 104px;
+          background: #f0ebde;
+          border: 1.5px solid #1f2be0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          z-index: 3;
+          transform-style: preserve-3d;
+          will-change: transform, opacity;
+        }
+        .f05-node svg {
+          width: 34px;
+          height: 34px;
+          display: block;
+        }
+        .f05-nlabel {
+          font-family: "DM Mono", monospace;
+          font-size: 11px;
+          letter-spacing: 0.08em;
+          color: #1f2be0;
+        }
+        #f05-n1 { left: 900px; top: 223px; }
+        #f05-n2 { left: 1385px; top: 358px; }
+        #f05-n3 { left: 1385px; top: 628px; }
+        #f05-n4 { left: 900px; top: 763px; }
+        #f05-n5 { left: 415px; top: 628px; }
+        #f05-n6 { left: 415px; top: 358px; }
+
+        /* orchestrator hub — the focal subject */
+        .f05-hub {
+          position: absolute;
+          left: 830px;
+          top: 485px;
+          width: 260px;
+          height: 120px;
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          z-index: 4;
+          will-change: transform, opacity;
+        }
+        .f05-hublabel {
+          font-family: "DM Mono", monospace;
+          font-size: 19px;
+          letter-spacing: 0.14em;
+          color: #1f2be0;
+          will-change: transform;
+        }
+        .f05-hubsub {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #5560e5;
+        }
+
+        /* instrumentation ring label — glow target on "control" */
+        .f05-ringlabel {
+          position: absolute;
+          left: 762px;
+          top: 411px;
+          z-index: 5;
+        }
+        .f05-ringlabel span {
+          display: inline-block;
+          background: #f0ebde;
+          border: 1.5px solid #1f2be0;
+          padding: 5px 10px;
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 13px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #1f2be0;
+          will-change: transform, opacity, text-shadow;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="05-the-owned-harness"
+        data-width="1920"
+        data-height="1080"
+        data-duration="9.652"
+      >
+        <!-- ground layer: full-bleed clip on lowest track (never on #root) -->
+        <div class="clip f05-bg" data-start="0" data-duration="9.652" data-track-index="0">
+          <div class="f05-hairline f05-hairline-top"></div>
+          <div class="f05-hairline f05-hairline-bot"></div>
+          <div class="f05-chrome f05-chrome-left">INFINITEMIRROR</div>
+          <div class="f05-chrome f05-chrome-right">005 / ORCHESTRATION</div>
+          <div class="f05-vstack">HARNESS · HUB</div>
+        </div>
+
+        <!-- stage clip: kicker + hub diagram under one camera -->
+        <div class="clip f05-stage" data-start="0" data-duration="9.652" data-track-index="1">
+          <div class="f05-camera" id="f05-camera">
+            <div class="f05-kicker" id="f05-kicker">
+              <span class="f05-kw">Now</span>
+              <span class="f05-kw">the</span>
+              <span class="f05-kw">part</span>
+              <span class="f05-kw">that</span>
+              <span class="f05-kw">compounds.</span>
+            </div>
+
+            <svg class="f05-net" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+              <!-- spokes hub → node (drawn on cue, staggered) -->
+              <g stroke="#1f2be0" stroke-opacity="0.28" stroke-width="2" fill="none">
+                <line class="f05-spoke" x1="960" y1="545" x2="960" y2="275" />
+                <line class="f05-spoke" x1="960" y1="545" x2="1445" y2="410" />
+                <line class="f05-spoke" x1="960" y1="545" x2="1445" y2="680" />
+                <line class="f05-spoke" x1="960" y1="545" x2="960" y2="815" />
+                <line class="f05-spoke" x1="960" y1="545" x2="475" y2="680" />
+                <line class="f05-spoke" x1="960" y1="545" x2="475" y2="410" />
+              </g>
+              <!-- message pulses node → hub (dash-flow, finite) -->
+              <g stroke="#1f2be0" stroke-width="3" fill="none" stroke-dasharray="10 36">
+                <line class="f05-pulse" x1="960" y1="275" x2="960" y2="545" />
+                <line class="f05-pulse" x1="1445" y1="410" x2="960" y2="545" />
+                <line class="f05-pulse" x1="1445" y1="680" x2="960" y2="545" />
+                <line class="f05-pulse" x1="960" y1="815" x2="960" y2="545" />
+                <line class="f05-pulse" x1="475" y1="680" x2="960" y2="545" />
+                <line class="f05-pulse" x1="475" y1="410" x2="960" y2="545" />
+              </g>
+              <!-- concentric instrumentation ring (square-cornered, per design system) -->
+              <rect
+                id="f05-ring"
+                x="760"
+                y="425"
+                width="400"
+                height="240"
+                fill="none"
+                stroke="#1f2be0"
+                stroke-width="2.5"
+              />
+              <g class="f05-ringticks" fill="#1f2be0">
+                <rect class="f05-tick" x="756" y="421" width="8" height="8" />
+                <rect class="f05-tick" x="1156" y="421" width="8" height="8" />
+                <rect class="f05-tick" x="1156" y="661" width="8" height="8" />
+                <rect class="f05-tick" x="756" y="661" width="8" height="8" />
+              </g>
+            </svg>
+
+            <!-- six agent nodes, iconned, ringed around the hub -->
+            <div class="f05-node" id="f05-n1">
+              <svg viewBox="0 0 32 32" fill="none" stroke="#1f2be0" stroke-width="2">
+                <path d="M4 6 h24 v16 h-14 l-6 6 v-6 h-4 z" />
+                <line x1="10" y1="12" x2="22" y2="12" />
+                <line x1="10" y1="17" x2="18" y2="17" />
+              </svg>
+              <div class="f05-nlabel">AGENT 01</div>
+            </div>
+            <div class="f05-node" id="f05-n2">
+              <svg viewBox="0 0 32 32" fill="none" stroke="#1f2be0" stroke-width="2">
+                <rect x="8" y="4" width="16" height="24" />
+                <line x1="12" y1="12" x2="20" y2="12" />
+                <line x1="12" y1="17" x2="20" y2="17" />
+                <line x1="12" y1="22" x2="17" y2="22" />
+              </svg>
+              <div class="f05-nlabel">AGENT 02</div>
+            </div>
+            <div class="f05-node" id="f05-n3">
+              <svg viewBox="0 0 32 32" fill="none" stroke="#1f2be0" stroke-width="2">
+                <line x1="9" y1="26" x2="9" y2="18" />
+                <line x1="16" y1="26" x2="16" y2="10" />
+                <line x1="23" y1="26" x2="23" y2="21" />
+                <line x1="5" y1="26" x2="27" y2="26" />
+              </svg>
+              <div class="f05-nlabel">AGENT 03</div>
+            </div>
+            <div class="f05-node" id="f05-n4">
+              <svg viewBox="0 0 32 32" fill="none" stroke="#1f2be0" stroke-width="2">
+                <rect x="4" y="6" width="24" height="20" />
+                <polyline points="9,12 13,16 9,20" />
+                <line x1="16" y1="20" x2="22" y2="20" />
+              </svg>
+              <div class="f05-nlabel">AGENT 04</div>
+            </div>
+            <div class="f05-node" id="f05-n5">
+              <svg viewBox="0 0 32 32" fill="none" stroke="#1f2be0" stroke-width="2">
+                <rect x="4" y="4" width="9" height="9" />
+                <rect x="19" y="19" width="9" height="9" />
+                <line x1="13" y1="13" x2="19" y2="19" />
+              </svg>
+              <div class="f05-nlabel">AGENT 05</div>
+            </div>
+            <div class="f05-node" id="f05-n6">
+              <svg viewBox="0 0 32 32" fill="none" stroke="#1f2be0" stroke-width="2">
+                <polyline points="18,4 10,17 15,17 12,28 22,14 16,14 18,4" />
+              </svg>
+              <div class="f05-nlabel">AGENT 06</div>
+            </div>
+
+            <!-- orchestrator hub -->
+            <div class="f05-hub" id="f05-hub">
+              <div class="f05-hublabel" id="f05-hublabel">ORCHESTRATOR</div>
+              <div class="f05-hubsub">Owned harness</div>
+            </div>
+
+            <!-- instrumentation label (keyword-glow target on "control") -->
+            <div class="f05-ringlabel" id="f05-ringlabel">
+              <span id="f05-ringlabel-txt">Instrumentation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+          (function () {
+            window.__timelines = window.__timelines || {};
+            var tl = gsap.timeline({ paused: true });
+            // At assembly this file is inlined among sibling frames, and every
+            // frame's root carries id="root" — scope queries via this frame's
+            // unique composition id instead (matches host slot or inner root;
+            // either contains this frame's elements).
+            var root = document.querySelector(
+              '[data-composition-id="05-the-owned-harness"]'
+            );
+            // Scope every query to this composition so class selectors never leak.
+            var q = function (sel) {
+              return root.querySelectorAll(sel);
+            };
+
+            /* ── Scene 1 (0.0–2.1s) — kicker lands per-word on the spoken cues,
+                   then glides up to the top third, clearing the stage. ── */
+            var kickTimes = [0.08, 0.3, 0.58, 0.97, 1.36]; // real VO word starts
+            q("#f05-kicker .f05-kw").forEach(function (el, i) {
+              tl.fromTo(
+                el,
+                { autoAlpha: 0, y: 26 },
+                { autoAlpha: 1, y: 0, duration: 0.55, ease: "power3.out" },
+                kickTimes[i]
+              );
+            });
+            tl.to("#f05-kicker", { y: -290, duration: 0.8, ease: "power3.inOut" }, 2.0);
+
+            /* ── Scene 2 (2.1–5.5s) — hub seats center on "we own"; six agent
+                   nodes flip in at their ring positions (orbit-3d entry, then
+                   settle static); spokes draw hub→node, staggered. ── */
+            tl.fromTo(
+              "#f05-hub",
+              { autoAlpha: 0, y: 26, scale: 0.94 },
+              { autoAlpha: 1, y: 0, scale: 1, duration: 0.7, ease: "power3.out" },
+              2.45
+            );
+
+            q(".f05-node").forEach(function (el, i) {
+              // flip in IN PLACE at the orbital position (CSS left/top holds the
+              // ring seat; the tween only animates orientation + opacity)
+              tl.fromTo(
+                el,
+                { autoAlpha: 0, rotateX: 78, rotateY: -28, z: -240, scale: 0.6 },
+                {
+                  autoAlpha: 1,
+                  rotateX: 0,
+                  rotateY: 0,
+                  z: 0,
+                  scale: 1,
+                  duration: 0.55,
+                  ease: "power3.out",
+                },
+                3.35 + i * 0.15
+              );
+            });
+
+            q(".f05-spoke").forEach(function (p, i) {
+              var len = p.getTotalLength();
+              p.style.strokeDasharray = String(len);
+              p.style.strokeDashoffset = String(len);
+              tl.to(
+                p,
+                { strokeDashoffset: 0, duration: 0.55, ease: "power2.out" },
+                4.75 + i * 0.25
+              );
+            });
+
+            /* ── Scene 3 (5.5–8.3s) — message pulses flow along every spoke into
+                   the hub; the instrumentation ring draws around it; camera
+                   pushes in toward the hub (ends before the hold). ── */
+            tl.fromTo(
+              ".f05-pulse",
+              { autoAlpha: 0 },
+              { autoAlpha: 0.8, duration: 0.3, ease: "power2.out" },
+              6.5
+            );
+            var pulses = q(".f05-pulse");
+            var flow = { o: 0 };
+            tl.to(
+              flow,
+              {
+                o: -368, // 8 full dash periods (10+36) — clean end frame, finite
+                duration: 2.2,
+                ease: "none",
+                onUpdate: function () {
+                  pulses.forEach(function (p) {
+                    p.style.strokeDashoffset = String(flow.o);
+                  });
+                },
+              },
+              6.5
+            );
+
+            var ring = root.querySelector("#f05-ring");
+            var rlen = ring.getTotalLength() * 1.02;
+            ring.style.strokeDasharray = String(rlen);
+            ring.style.strokeDashoffset = String(rlen);
+            tl.to(ring, { strokeDashoffset: 0, duration: 0.9, ease: "power2.out" }, 7.15);
+            tl.fromTo(
+              ".f05-tick",
+              { autoAlpha: 0 },
+              { autoAlpha: 1, duration: 0.25, ease: "power2.out", stagger: 0.06 },
+              8.0
+            );
+
+            tl.fromTo(
+              "#f05-ringlabel-txt",
+              { autoAlpha: 0, y: 10 },
+              { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" },
+              7.5
+            );
+
+            // camera push-in toward the hub — completes before the held read
+            tl.to("#f05-camera", { scale: 1.06, duration: 1.55, ease: "power2.inOut" }, 6.8);
+
+            // keyword glow lands on "control" (VO 8.30s): attack → sustain → rest
+            tl.to(
+              "#f05-ringlabel-txt",
+              {
+                scale: 1.09,
+                textShadow: "0 0 16px rgba(31,43,224,0.55)",
+                duration: 0.2,
+                ease: "power2.out",
+              },
+              8.32
+            );
+            tl.to(
+              "#f05-ringlabel-txt",
+              {
+                scale: 1.02,
+                textShadow: "0 0 6px rgba(31,43,224,0.25)",
+                duration: 0.45,
+                ease: "power2.out",
+              },
+              8.68
+            );
+
+            /* ── Scene 4 (8.3–9.152s) — held read: pulses have completed and
+                   stop; subtle jitter on the hub label only (sin ends at 0). ── */
+            var hubLabel = document.getElementById("f05-hublabel");
+            var jit = { p: 0 };
+            tl.to(
+              jit,
+              {
+                p: Math.PI * 2,
+                duration: 1.0,
+                ease: "none",
+                onUpdate: function () {
+                  hubLabel.style.transform =
+                    "translateY(" + (Math.sin(jit.p) * 1.3).toFixed(2) + "px)";
+                },
+              },
+              8.15
+            );
+
+            window.__timelines["05-the-owned-harness"] = tl;
+          })();
+        </script>
+    </template>
+  </body>
+</html>
