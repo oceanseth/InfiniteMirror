@@ -3,3 +3,4 @@ __pycache__/
 lora/sft.jsonl
 lora/dpo.jsonl
 .DS_Store
+landing/film/work/
