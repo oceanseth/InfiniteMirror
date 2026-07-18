@@ -13,6 +13,15 @@
       --sw-accent: #66e0ff;
       --sw-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
     }
+    /* Dark-theme chrome corrections: the engine's pills (Admin button, top nav,
+       route-rail labels) are light surfaces — give them dark text/accent fills
+       so they read against our dark ink variable. */
+    .sw-topcta { color: #0a0e12; background: #66e0ff; }
+    .sw-nav__item { color: #26313b; }
+    .sw-nav__item:hover { color: #0a0e12; }
+    .sw-nav__item.is-active { color: #0a0e12; background: #66e0ff; }
+    .sw-route__label { color: #0a0e12; }
+    .sw-btn--primary { color: #0a0e12; background: #66e0ff; }
   </style>
 </head>
 <body>
