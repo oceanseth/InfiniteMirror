@@ -1,0 +1,370 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 14 — See it live</title>
+    <!-- head is source-file metadata only; the runtime clones <template> contents -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+          font-weight: 600;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        /* Root: styled via #root only (never a class on the composition root). */
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          container-type: size;
+        }
+
+        /* ---- Ground: full-bleed clip (never a background on #root) ---- */
+        .f14sl-ground {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 0, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 0, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 2cqw 2cqw;
+        }
+        .f14sl-hairline {
+          position: absolute;
+          left: 4cqw;
+          right: 4cqw;
+          height: 0.12cqw;
+          background: #1f2be0;
+        }
+        .f14sl-hairline-top {
+          top: 3cqw;
+        }
+        .f14sl-hairline-bottom {
+          bottom: 3cqw;
+        }
+
+        /* ---- Stage ---- */
+        .f14sl-stage {
+          position: absolute;
+          inset: 0;
+        }
+
+        /* Mirror hairline (callback to Frame 2) — vertical self-drawing rule */
+        .f14sl-mirror-svg {
+          position: absolute;
+          left: 0;
+          width: 100%;
+          top: 24cqh;
+          height: 36cqh;
+          display: block;
+        }
+        .f14sl-mirror-svg path {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 2.4;
+          vector-effect: non-scaling-stroke;
+          stroke-linecap: butt;
+        }
+
+        /* Wordmark lockup — display-closing, centered, hero anchored y ≈ 0.42h */
+        .f14sl-lockup {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 33.9cqh;
+          height: 16.2cqh;
+        }
+        .f14sl-wordmark,
+        .f14sl-wordmark-ghost {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 0;
+          display: block;
+          text-align: center;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 9.4cqw;
+          line-height: 0.96;
+          letter-spacing: -0.005em;
+          white-space: nowrap;
+        }
+        .f14sl-wordmark {
+          color: #1f2be0;
+          will-change: transform;
+        }
+        /* Reflected ghost: CSS transform only — GSAP touches nothing but opacity here */
+        .f14sl-wordmark-ghost {
+          color: rgba(31, 43, 224, 0.14);
+          transform: scaleX(-1);
+        }
+
+        /* Provenance line — micro-strong grammar, lifted to the 1.4cqw legibility floor */
+        .f14sl-provenance {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 56cqh;
+          display: flex;
+          justify-content: center;
+          column-gap: 1.1ch;
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 1.4cqw;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #1f2be0;
+          white-space: nowrap;
+        }
+        .f14sl-word {
+          display: inline-block;
+          will-change: transform;
+        }
+
+        /* URL pill — ink-bordered, square corners (0 radius everywhere) */
+        .f14sl-pill-row {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 64.5cqh;
+          text-align: center;
+        }
+        .f14sl-pill {
+          display: inline-block;
+          border: 0.12cqw solid #1f2be0;
+          background: #e6e0ce;
+          padding: 1.9cqh 2.2cqw;
+          will-change: transform;
+        }
+        .f14sl-url {
+          display: inline-block;
+          font-family: "DM Mono", monospace;
+          font-weight: 400;
+          font-size: 1.7cqw;
+          letter-spacing: 0.05em;
+          color: #1f2be0;
+          white-space: nowrap;
+          will-change: transform, text-shadow;
+        }
+
+        /* QR-block corner patch — signature punctuation, inside the top-83% band */
+        .f14sl-qr {
+          position: absolute;
+          right: 4cqw;
+          top: 70cqh;
+          width: 6cqw;
+          height: 6cqw;
+          background: #f0ebde;
+          box-shadow: 0 0 0 0.12cqw #f0ebde;
+          display: grid;
+          grid-template-columns: repeat(8, 1fr);
+          grid-template-rows: repeat(8, 1fr);
+          will-change: transform;
+        }
+        .f14sl-qr-on {
+          background: #1f2be0;
+        }
+        .f14sl-qr-off {
+          background: rgba(31, 43, 224, 0.1);
+        }
+      </style>
+
+      <div id="root" data-composition-id="14-see-it-live" data-width="1920" data-height="1080">
+        <!-- Track 0 — full-bleed ground (paper + permanent grid + framing hairlines) -->
+        <div class="clip f14sl-ground" data-start="0" data-duration="6.4" data-track-index="0">
+          <div class="f14sl-hairline f14sl-hairline-top"></div>
+          <div class="f14sl-hairline f14sl-hairline-bottom"></div>
+        </div>
+
+        <!-- Track 1 — the lockup stage -->
+        <div class="clip f14sl-stage" data-start="0" data-duration="6.4" data-track-index="1">
+          <!-- Beat 1: mirror hairline (self-draws) + reflected ghost + wordmark -->
+          <svg class="f14sl-mirror-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path id="f14sl-mirror-line" d="M 50 0 L 50 100" />
+          </svg>
+          <div class="f14sl-lockup">
+            <div class="f14sl-wordmark-ghost" id="f14sl-ghost">InfiniteMirror</div>
+            <div class="f14sl-wordmark" id="f14sl-wordmark">InfiniteMirror</div>
+          </div>
+
+          <!-- Beat 2: provenance line, per-word -->
+          <div class="f14sl-provenance" id="f14sl-provenance">
+            <span class="f14sl-word">Loop</span>
+            <span class="f14sl-word">Hackathon</span>
+            <span class="f14sl-word">&mdash;</span>
+            <span class="f14sl-word">July</span>
+            <span class="f14sl-word">2026</span>
+          </div>
+
+          <!-- Beat 3: URL pill payoff -->
+          <div class="f14sl-pill-row">
+            <div class="f14sl-pill" id="f14sl-pill">
+              <span class="f14sl-url" id="f14sl-url">infinitemirror.masky.ai</span>
+            </div>
+          </div>
+
+          <!-- Beat 2b: QR-block corner patch -->
+          <div class="f14sl-qr" id="f14sl-qr"></div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        // Frame 14 — See it live (CTA / closing lockup)
+        // duration 6.4s (authoritative); drafted 8.0s scenes scaled by 0.8:
+        //   Scene 1: 0.00–1.76  wordmark hard-cut arrival + mirror hairline
+        //   Scene 2: 1.76–3.68  provenance per-word + QR stamp
+        //   Scene 3: 3.68–5.44  URL pill spring-pop + one keyword-glow sweep
+        //   Scene 4: 5.44–6.40  held lockup, still (final frame; no exit used)
+        window.__timelines = window.__timelines || {};
+
+        var DURATION = 6.4;
+        var INK = { r: 31, g: 43, b: 224 };
+
+        // --- QR mosaic: deterministic hand-authored 8x8 pattern ---
+        var QR_ROWS = [
+          "11101101",
+          "10100111",
+          "11100100",
+          "00011010",
+          "10110010",
+          "01001011",
+          "10010111",
+          "11011001"
+        ];
+        var qrHost = document.getElementById("f14sl-qr");
+        for (var r = 0; r < 8; r++) {
+          for (var c = 0; c < 8; c++) {
+            var cell = document.createElement("div");
+            cell.className = QR_ROWS[r].charAt(c) === "1" ? "f14sl-qr-on" : "f14sl-qr-off";
+            qrHost.appendChild(cell);
+          }
+        }
+
+        // --- svg-path-draw setup: measure real geometry, hide the stroke ---
+        var mirrorPath = document.getElementById("f14sl-mirror-line");
+        var mirrorLen = mirrorPath.getTotalLength();
+        mirrorPath.style.strokeDasharray = String(mirrorLen);
+        mirrorPath.style.strokeDashoffset = String(mirrorLen);
+
+        var tl = gsap.timeline({ paused: true });
+
+        // ================= Scene 1 (0.00–1.76) — "InfiniteMirror" =================
+        // Hard-cut arrival: fully visible at t=0 (transition_in is a cut), then a
+        // smooth long-tail settle. fromTo so a seek to t=0 is exact.
+        tl.fromTo(
+          "#f14sl-wordmark",
+          { scale: 1.045, opacity: 1 },
+          { scale: 1, duration: 0.9, ease: "power3.out" },
+          0
+        );
+
+        // Mirror hairline self-draws top-to-bottom through the wordmark center.
+        tl.to(
+          "#f14sl-mirror-line",
+          { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" },
+          0.12
+        );
+
+        // Reflected ghost fades up behind the ink wordmark (opacity only —
+        // its scaleX(-1) mirror lives in CSS and is never GSAP-touched).
+        tl.fromTo(
+          "#f14sl-ghost",
+          { opacity: 0 },
+          { opacity: 1, duration: 0.8, ease: "power2.out" },
+          0.3
+        );
+
+        // ============ Scene 2 (1.76–3.68) — "built at the Loop Hackathon" ============
+        // Per-word staggered reveal on the spoken cue; deterministic index stagger.
+        var words = gsap.utils.toArray(".f14sl-word");
+        words.forEach(function (el, i) {
+          tl.fromTo(
+            el,
+            { opacity: 0, y: 14 },
+            { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+            1.8 + i * 0.09
+          );
+        });
+
+        // QR-block patch stamps the lower-right corner (top-83% band).
+        tl.fromTo(
+          "#f14sl-qr",
+          { opacity: 0, scale: 1.18 },
+          { opacity: 1, scale: 1, duration: 0.4, ease: "power3.out" },
+          2.75
+        );
+
+        // ======= Scene 3 (3.68–5.44) — "see it at infinitemirror.masky.ai" =======
+        // spring-pop-entrance: scale 0 -> 1 on a smooth power3 settle, no overshoot.
+        tl.fromTo(
+          "#f14sl-pill",
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.55, ease: "power3.out" },
+          3.78
+        );
+
+        // asr-keyword-glow: one attack/sustain/release sweep across the URL as it
+        // is spoken, decaying to a subtle rest glow through the final hold.
+        var GLOW = { start: 4.35, end: 5.05 };
+        var ATTACK_DUR = 0.18;
+        var RELEASE = 0.45;
+        var REST_LEVEL = 0.18;
+        var MAX_BLUR = 22;
+        var MAX_SCALE_BOOST = 0.045;
+
+        function envelope(time, start, end) {
+          var releaseEnd = end + RELEASE;
+          if (time < start) return 0;
+          if (time < end) return Math.min((time - start) / ATTACK_DUR, 1);
+          if (time < releaseEnd) {
+            var decay = (time - end) / RELEASE;
+            return 1 - decay * (1 - REST_LEVEL);
+          }
+          return REST_LEVEL;
+        }
+
+        var urlEl = document.getElementById("f14sl-url");
+        var driver = { t: 0 };
+        tl.to(
+          driver,
+          {
+            t: DURATION,
+            duration: DURATION,
+            ease: "none",
+            onUpdate: function () {
+              var env = envelope(driver.t, GLOW.start, GLOW.end);
+              var blur = MAX_BLUR * env;
+              var alpha = 0.55 * env;
+              urlEl.style.textShadow =
+                "0 0 " + blur + "px rgba(" + INK.r + "," + INK.g + "," + INK.b + "," + alpha + ")";
+              urlEl.style.transform = "scale(" + (1 + MAX_SCALE_BOOST * env) + ")";
+            }
+          },
+          0
+        );
+
+        // ============ Scene 4 (5.44–6.40) — held lockup, dead still ============
+        // Final frame: no exit, no jitter — hold to cut.
+
+        window.__timelines["14-see-it-live"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

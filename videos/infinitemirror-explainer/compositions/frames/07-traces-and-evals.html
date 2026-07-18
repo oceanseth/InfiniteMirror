@@ -1,0 +1,696 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 07 — Traces and evals</title>
+  </head>
+  <body>
+    <template>
+      <style>
+        /* ---- Cobalt Grid tokens ---- */
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400-italic.woff2") format("woff2");
+          font-weight: 400;
+          font-style: italic;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+          font-weight: 600;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        /* Root — sized box, styled by #root only */
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          font-family: "Hanken Grotesk", sans-serif;
+          color: #1f2be0;
+        }
+
+        /* ---- Ground: paper + permanent graph grid + hub stage + hairlines ---- */
+        .f07-bg {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .f07-hub-stage {
+          position: absolute;
+          inset: 0;
+        }
+        .f07-hairline {
+          position: absolute;
+          left: 77px;
+          right: 77px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .f07-hairline-top {
+          top: 58px;
+        }
+        .f07-hairline-bottom {
+          top: 1022px;
+        }
+
+        /* ---- Content stage (camera plane) ---- */
+        .f07-stage {
+          position: absolute;
+          inset: 0;
+        }
+        .f07-camera {
+          position: absolute;
+          inset: 0;
+          transform-origin: 50% 50%;
+          will-change: transform;
+        }
+
+        /* ---- Trace ledger (foreground subject, left 60) ---- */
+        .f07-ledger {
+          position: absolute;
+          left: 100px;
+          top: 170px;
+          width: 880px;
+        }
+        .f07-kicker-row {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+        }
+        .f07-kicker {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 16px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f07-append-tag {
+          display: inline-block;
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 13px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          background: #1f2be0;
+          color: #f0ebde;
+          padding: 6px 12px;
+          transform-origin: 50% 50%;
+        }
+        .f07-rule {
+          height: 2px;
+          background: #1f2be0;
+          margin-top: 12px;
+          transform-origin: left center;
+        }
+        .f07-colhead {
+          display: grid;
+          grid-template-columns: 96px 230px 1fr 110px;
+          gap: 18px;
+          padding: 12px 0 10px;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #5560e5;
+          border-bottom: 1px solid rgba(31, 43, 224, 0.18);
+        }
+        .f07-row {
+          display: grid;
+          grid-template-columns: 96px 230px 1fr 110px;
+          gap: 18px;
+          align-items: center;
+          height: 92px;
+          border-bottom: 1px solid rgba(31, 43, 224, 0.18);
+          transform-origin: left center;
+        }
+        .f07-row-num {
+          font-family: "DM Mono", monospace;
+          font-size: 22px;
+          letter-spacing: 0.05em;
+          color: #5560e5;
+        }
+        .f07-row-name {
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 38px;
+          line-height: 1.05;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+        }
+        .f07-row-desc {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 400;
+          font-size: 23px;
+          color: #5560e5;
+        }
+        .f07-row-state {
+          font-family: "DM Mono", monospace;
+          font-size: 20px;
+          letter-spacing: 0.05em;
+          color: #5560e5;
+          text-align: right;
+        }
+        .f07-row-violation .f07-row-desc,
+        .f07-row-violation .f07-row-num {
+          color: #1f2be0;
+        }
+        .f07-state-flag {
+          display: inline-block;
+          background: #1f2be0;
+          color: #f0ebde;
+          font-family: "DM Mono", monospace;
+          font-size: 20px;
+          padding: 4px 14px;
+        }
+
+        /* ---- Eval meters (supporting, right 40) ---- */
+        .f07-evals {
+          position: absolute;
+          left: 1180px;
+          top: 170px;
+          width: 563px;
+        }
+        .f07-gauge-block {
+          margin-top: 44px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .f07-gauge-wrap {
+          position: relative;
+          width: 236px;
+          height: 236px;
+        }
+        .f07-gauge-wrap svg {
+          position: absolute;
+          inset: 0;
+          width: 236px;
+          height: 236px;
+        }
+        .f07-gauge-svg rect {
+          fill: none;
+          stroke-width: 5;
+        }
+        .f07-gauge-track {
+          stroke: rgba(31, 43, 224, 0.1);
+        }
+        .f07-gauge-fill {
+          stroke: #1f2be0;
+        }
+        .f07-gauge-num {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          padding-top: 62px;
+        }
+        .f07-gauge-value {
+          display: inline-block;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 92px;
+          line-height: 1;
+          letter-spacing: -0.008em;
+          font-variant-numeric: tabular-nums;
+          color: #1f2be0;
+          min-width: 108px;
+          text-align: right;
+          transform-origin: center center;
+        }
+        .f07-gauge-suffix {
+          font-family: "Newsreader", serif;
+          font-size: 36px;
+          color: #5560e5;
+          margin-left: 4px;
+        }
+        .f07-meter-label {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 16px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #1f2be0;
+          margin-top: 20px;
+        }
+        .f07-hop-block {
+          margin-top: 58px;
+        }
+        .f07-hop-head {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+        }
+        .f07-hop-num {
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 54px;
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+          color: #1f2be0;
+          min-width: 96px;
+          text-align: right;
+        }
+        .f07-hop-suffix {
+          font-family: "Newsreader", serif;
+          font-size: 26px;
+          color: #5560e5;
+        }
+        .f07-hop-track {
+          margin-top: 16px;
+          width: 100%;
+          height: 14px;
+          background: rgba(31, 43, 224, 0.1);
+        }
+        .f07-hop-fill {
+          display: block;
+          width: 100%;
+          height: 100%;
+          background: #1f2be0;
+          transform-origin: left center;
+        }
+
+        /* ---- Minted training-data chips (payoff) ---- */
+        .f07-mint {
+          position: absolute;
+          left: 758px;
+          top: 440px;
+          width: 460px;
+          z-index: 6;
+        }
+        .f07-mint-head {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          margin-bottom: 14px;
+        }
+        .f07-mint-label {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 16px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+        .f07-mint-tag {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          color: #5560e5;
+        }
+        .f07-chip {
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.03em;
+          color: #1f2be0;
+          padding: 20px 22px;
+          margin-bottom: 12px;
+          transform-origin: 50% 50%;
+        }
+        .f07-chip-2 {
+          margin-left: 10px;
+        }
+        .f07-chip-3 {
+          margin-left: 20px;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="07-traces-and-evals"
+        data-width="1920"
+        data-height="1080"
+        data-duration="12.724"
+      >
+        <!-- Ground: paper + grid + dimmed hub stage carried from Frames 5-6 + hairlines -->
+        <div class="f07-bg clip" data-start="0" data-duration="12.724" data-track-index="0">
+          <svg
+            class="f07-hub-stage"
+            viewBox="0 0 1920 1080"
+            fill="none"
+            stroke="rgba(31,43,224,0.12)"
+            stroke-width="2"
+          >
+            <!-- spokes -->
+            <line x1="960" y1="540" x2="960" y2="220" />
+            <line x1="960" y1="540" x2="1237" y2="380" />
+            <line x1="960" y1="540" x2="1237" y2="700" />
+            <line x1="960" y1="540" x2="960" y2="860" />
+            <line x1="960" y1="540" x2="683" y2="700" />
+            <line x1="960" y1="540" x2="683" y2="380" />
+            <!-- agent nodes (square, ring geometry carried from Frame 5) -->
+            <rect x="938" y="198" width="44" height="44" />
+            <rect x="1215" y="358" width="44" height="44" />
+            <rect x="1215" y="678" width="44" height="44" />
+            <rect x="938" y="838" width="44" height="44" />
+            <rect x="661" y="678" width="44" height="44" />
+            <rect x="661" y="358" width="44" height="44" />
+            <!-- orchestrator hub + instrumentation outline -->
+            <rect x="915" y="495" width="90" height="90" />
+            <rect x="885" y="465" width="150" height="150" />
+          </svg>
+          <div class="f07-hairline f07-hairline-top"></div>
+          <div class="f07-hairline f07-hairline-bottom"></div>
+        </div>
+
+        <!-- Content stage under one camera (dataviz-countup push-THROUGH) -->
+        <div class="f07-stage clip" data-start="0" data-duration="12.724" data-track-index="1">
+          <div class="f07-camera" id="f07-camera">
+            <!-- Trace ledger — focal -->
+            <div class="f07-ledger" id="f07-ledger">
+              <div class="f07-kicker-row">
+                <div class="f07-kicker" id="f07-ledger-kicker">Trace Ledger</div>
+                <div class="f07-append-tag" id="f07-append-tag">Append-Only</div>
+              </div>
+              <div class="f07-rule" id="f07-ledger-rule"></div>
+              <div class="f07-colhead" id="f07-colhead">
+                <span>seq</span><span>event</span><span>detail</span
+                ><span style="text-align:right">state</span>
+              </div>
+              <div class="f07-row" id="f07-row-1">
+                <span class="f07-row-num">0047</span>
+                <span class="f07-row-name">Route</span>
+                <span class="f07-row-desc">planner -&gt; search</span>
+                <span class="f07-row-state">ok</span>
+              </div>
+              <div class="f07-row" id="f07-row-2">
+                <span class="f07-row-num">0048</span>
+                <span class="f07-row-name">Reply</span>
+                <span class="f07-row-desc">response logged</span>
+                <span class="f07-row-state">ok</span>
+              </div>
+              <div class="f07-row f07-row-violation" id="f07-row-3">
+                <span class="f07-row-num">0049</span>
+                <span class="f07-row-name">Violation</span>
+                <span class="f07-row-desc">skill not declared</span>
+                <span class="f07-row-state"><span class="f07-state-flag">!</span></span>
+              </div>
+            </div>
+
+            <!-- Eval meters — supporting, momentary focus -->
+            <div class="f07-evals" id="f07-evals">
+              <div class="f07-kicker-row">
+                <div class="f07-kicker" id="f07-evals-kicker">Evals</div>
+              </div>
+              <div class="f07-rule" id="f07-evals-rule"></div>
+
+              <div class="f07-gauge-block" id="f07-gauge-block">
+                <div class="f07-gauge-wrap">
+                  <svg class="f07-gauge-svg" viewBox="0 0 240 240">
+                    <rect class="f07-gauge-track" x="8" y="8" width="224" height="224" />
+                    <rect
+                      class="f07-gauge-fill"
+                      id="f07-gauge-fill"
+                      x="8"
+                      y="8"
+                      width="224"
+                      height="224"
+                    />
+                  </svg>
+                  <div class="f07-gauge-num" id="f07-gauge-num">
+                    <span class="f07-gauge-value" id="f07-gauge-value">0</span>
+                    <span class="f07-gauge-suffix">%</span>
+                  </div>
+                </div>
+                <div class="f07-meter-label" id="f07-gauge-label">Skill Respect</div>
+              </div>
+
+              <div class="f07-hop-block" id="f07-hop-block">
+                <div class="f07-hop-head">
+                  <div class="f07-meter-label" style="margin-top:0">Hop Efficiency</div>
+                  <div>
+                    <span class="f07-hop-num" id="f07-hop-value">0</span>
+                    <span class="f07-hop-suffix">%</span>
+                  </div>
+                </div>
+                <div class="f07-hop-track">
+                  <span class="f07-hop-fill" id="f07-hop-fill"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Minted training-data chips — payoff, camera target -->
+            <div class="f07-mint" id="f07-mint">
+              <div class="f07-mint-head" id="f07-mint-head">
+                <div class="f07-mint-label">Training Data</div>
+                <div class="f07-mint-tag">traces.jsonl</div>
+              </div>
+              <div class="f07-chip f07-chip-1" id="f07-chip-1">
+                {"trace":"0047","skill_respect":0.94}
+              </div>
+              <div class="f07-chip f07-chip-2" id="f07-chip-2">
+                {"trace":"0048","hop_eff":0.87}
+              </div>
+              <div class="f07-chip f07-chip-3" id="f07-chip-3">
+                {"trace":"0049","label":"violation"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+
+        /*
+         * Frame 7 — Traces and evals. duration 12.224s (authoritative).
+         * Scene windows scaled x1.01867 from the drafted 12.0s:
+         *   S1 0.000-3.667  ledger rows cascade, one per spoken cue
+         *   S2 3.667-7.538  eval meters fire on their cues
+         *   S3 7.538-10.594 scale-swap rows -> chips, camera push-THROUGH
+         *   S4 10.594-12.224 held read, still
+         */
+
+        // Square gauge "ring" — measured stroke draw (svg-path-draw mechanics)
+        var f07GaugeFill = document.getElementById("f07-gauge-fill");
+        var F07_GAUGE_LEN = f07GaugeFill.getTotalLength();
+        f07GaugeFill.style.strokeDasharray = String(F07_GAUGE_LEN);
+        f07GaugeFill.style.strokeDashoffset = String(F07_GAUGE_LEN);
+
+        var f07 = gsap.timeline({ paused: true });
+        var EASE = "power3.out";
+
+        /* ---- Scene 1 (0.0-3.667): ledger establishes, rows land on spoken cues ---- */
+        f07.fromTo(
+          "#f07-ledger-kicker",
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.6, ease: EASE },
+          0.15
+        );
+        f07.fromTo(
+          "#f07-ledger-rule",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.6, ease: EASE },
+          0.2
+        );
+        f07.fromTo(
+          "#f07-colhead",
+          { opacity: 0 },
+          { opacity: 1, duration: 0.5, ease: "power2.out" },
+          0.35
+        );
+        // "every routing decision"
+        f07.fromTo(
+          "#f07-row-1",
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.65, ease: EASE },
+          0.55
+        );
+        // "every reply"
+        f07.fromTo(
+          "#f07-row-2",
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.65, ease: EASE },
+          1.55
+        );
+        // "every violation" — stamps in ink at full opacity
+        f07.fromTo(
+          "#f07-row-3",
+          { opacity: 0, scale: 1.12 },
+          { opacity: 1, scale: 1, duration: 0.45, ease: EASE },
+          2.45
+        );
+        // "lands in append-only traces" — the tag stamps
+        f07.fromTo(
+          "#f07-append-tag",
+          { opacity: 0, scale: 1.18 },
+          { opacity: 1, scale: 1, duration: 0.35, ease: EASE },
+          3.15
+        );
+
+        /* ---- Scene 2 (3.667-7.538): eval meters, each exactly on its cue ---- */
+        // "evals score them"
+        f07.fromTo(
+          "#f07-evals-kicker",
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.55, ease: EASE },
+          3.85
+        );
+        f07.fromTo(
+          "#f07-evals-rule",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.55, ease: EASE },
+          3.9
+        );
+        f07.fromTo(
+          "#f07-gauge-block",
+          { opacity: 0 },
+          { opacity: 1, duration: 0.45, ease: "power2.out" },
+          4.15
+        );
+        // "skill respect" — square ring fills + percentage counts up, one beat
+        var f07GaugeState = { v: 0 };
+        var f07GaugeValueEl = document.getElementById("f07-gauge-value");
+        f07.to(
+          "#f07-gauge-fill",
+          { strokeDashoffset: F07_GAUGE_LEN * (1 - 0.94), duration: 1.1, ease: EASE },
+          4.55
+        );
+        f07.to(
+          f07GaugeState,
+          {
+            v: 94,
+            duration: 1.1,
+            ease: EASE,
+            onUpdate: function () {
+              f07GaugeValueEl.textContent = String(Math.round(f07GaugeState.v));
+            },
+          },
+          4.55
+        );
+        f07.fromTo(
+          "#f07-gauge-value",
+          { scale: 0.55 },
+          { scale: 1, duration: 1.1, ease: EASE },
+          4.55
+        );
+        f07.fromTo(
+          "#f07-gauge-label",
+          { opacity: 0, y: 10 },
+          { opacity: 1, y: 0, duration: 0.5, ease: EASE },
+          4.75
+        );
+        // "hop efficiency" — the bar fills beside it
+        f07.fromTo(
+          "#f07-hop-block",
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.5, ease: EASE },
+          5.7
+        );
+        var f07HopState = { v: 0 };
+        var f07HopValueEl = document.getElementById("f07-hop-value");
+        f07.fromTo(
+          "#f07-hop-fill",
+          { scaleX: 0 },
+          { scaleX: 0.87, duration: 0.9, ease: EASE },
+          5.9
+        );
+        f07.to(
+          f07HopState,
+          {
+            v: 87,
+            duration: 0.9,
+            ease: EASE,
+            onUpdate: function () {
+              f07HopValueEl.textContent = String(Math.round(f07HopState.v));
+            },
+          },
+          5.9
+        );
+
+        /* ---- Scene 3 (7.538-10.594): scale-swap rows -> minted chips, push-THROUGH ---- */
+        // Outgoing: scored rows shrink + dim (no exit — they remain, receded)
+        f07.to(
+          [
+            "#f07-row-1",
+            "#f07-row-2",
+            "#f07-row-3",
+          ],
+          { opacity: 0.1, scale: 0.94, duration: 0.45, ease: "power2.in" },
+          7.55
+        );
+        f07.to(
+          "#f07-colhead",
+          { opacity: 0.35, duration: 0.45, ease: "power2.in" },
+          7.55
+        );
+        // Incoming: training-data chips pop in on "mint them into training data"
+        f07.fromTo(
+          "#f07-chip-1",
+          { opacity: 0, y: 26, scale: 0.85 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: EASE },
+          7.85
+        );
+        f07.fromTo(
+          "#f07-chip-2",
+          { opacity: 0, y: 26, scale: 0.85 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: EASE },
+          8.05
+        );
+        f07.fromTo(
+          "#f07-chip-3",
+          { opacity: 0, y: 26, scale: 0.85 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: EASE },
+          8.25
+        );
+        f07.fromTo(
+          "#f07-mint-head",
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.55, ease: EASE },
+          8.65
+        );
+        // Instruments recede as the camera drives through them
+        f07.to("#f07-ledger", { opacity: 0.3, duration: 1.2, ease: "power2.inOut" }, 8.8);
+        f07.to("#f07-evals", { opacity: 0.3, duration: 1.2, ease: "power2.inOut" }, 8.8);
+
+        /* ---- Camera (multi-phase-camera): slow drift-in, then push-THROUGH ---- */
+        // Phase A — imperceptible continuous zoom under S1-S2
+        f07.fromTo(
+          "#f07-camera",
+          { scale: 1, x: 0, y: 0 },
+          { scale: 1.03, duration: 7.5, ease: "none" },
+          0
+        );
+        // Phase B — signature push-THROUGH toward the minted stack; completes before hold
+        f07.to(
+          "#f07-camera",
+          { scale: 1.55, x: -43, y: -91, duration: 1.75, ease: "power2.inOut" },
+          8.8
+        );
+
+        /* ---- Scene 4 (10.594-12.224): held read on the minted stack — still ---- */
+
+        window.__timelines["07-traces-and-evals"] = f07;
+      </script>
+    </template>
+  </body>
+</html>

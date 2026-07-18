@@ -1,0 +1,583 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 8 — The flywheel closes</title>
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---------- ground (full-bleed clip, never on #root) ---------- */
+        .fw8-bg {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .fw8-hairline {
+          position: absolute;
+          left: 77px;
+          right: 77px;
+          height: 2px;
+          background: #1f2be0;
+        }
+
+        /* ---------- stage ---------- */
+        .fw8-stage {
+          position: absolute;
+          inset: 0;
+        }
+        .fw8-abs {
+          position: absolute;
+        }
+        .fw8-svg {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+        }
+
+        /* Scene 1 — training chips → LoRA */
+        .fw8-chip {
+          position: absolute;
+          width: 172px;
+          height: 44px;
+          box-sizing: border-box;
+          background: #e6e0ce;
+          border: 2px solid rgba(31, 43, 224, 0.18);
+          display: flex;
+          align-items: center;
+          padding: 0 14px;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          color: rgba(31, 43, 224, 0.85);
+        }
+        .fw8-lora-card {
+          position: absolute;
+          left: 590px;
+          top: 402px;
+          width: 200px;
+          height: 112px;
+          box-sizing: border-box;
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 44px;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+          box-shadow: 0 0 0 3px #f0ebde;
+        }
+        .fw8-tinker-tag {
+          position: absolute;
+          left: 490px;
+          top: 540px;
+          width: 400px;
+          text-align: center;
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          color: #5560e5;
+        }
+
+        /* Scene 2 — vLLM chip + adapter */
+        .fw8-vllm {
+          position: absolute;
+          left: 1110px;
+          top: 320px;
+          width: 360px;
+          height: 300px;
+        }
+        .fw8-vllm-name {
+          position: absolute;
+          left: 80px;
+          top: 148px;
+          width: 200px;
+          text-align: center;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 38px;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+        }
+        .fw8-slot {
+          position: absolute;
+          left: 118px;
+          top: 78px;
+          width: 124px;
+          height: 56px;
+          box-sizing: border-box;
+          border: 2px dashed rgba(31, 43, 224, 0.35);
+        }
+        .fw8-adapter {
+          position: absolute;
+          left: 122px;
+          top: 82px;
+          width: 116px;
+          height: 48px;
+          box-sizing: border-box;
+          background: #f0ebde;
+          border: 2px solid #1f2be0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.05em;
+          color: #1f2be0;
+        }
+        .fw8-vllm-tag {
+          position: absolute;
+          left: 0;
+          top: 244px;
+          width: 360px;
+          text-align: center;
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          color: #5560e5;
+        }
+
+        /* Scene 3 — five stage nodes on the ring */
+        .fw8-node {
+          position: absolute;
+          width: 256px;
+          height: 84px;
+          box-sizing: border-box;
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 0 20px;
+          box-shadow: 0 0 0 3px #f0ebde;
+        }
+        .fw8-node-num {
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.06em;
+          color: #5560e5;
+        }
+        .fw8-node-name {
+          display: inline-block;
+          transform-origin: 50% 50%;
+          will-change: transform, text-shadow;
+          white-space: nowrap;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 28px;
+          line-height: 1.05;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="08-the-flywheel-closes"
+        data-width="1920"
+        data-height="1080"
+        data-duration="13.343"
+      >
+        <!-- ground: paper + permanent graph grid + cobalt hairlines -->
+        <div
+          class="clip fw8-bg"
+          id="fw8-bg"
+          data-start="0"
+          data-duration="13.343"
+          data-track-index="0"
+        >
+          <div class="fw8-hairline" style="top: 58px"></div>
+          <div class="fw8-hairline" style="top: 1020px"></div>
+        </div>
+
+        <!-- stage: all invented content -->
+        <div
+          class="clip fw8-stage"
+          id="fw8-stage"
+          data-start="0"
+          data-duration="13.343"
+          data-track-index="1"
+        >
+          <!-- Scene 1 group (dims to ghost when the ring assembles) -->
+          <div class="fw8-abs" id="fw8-dimmable" style="inset: 0">
+            <div class="fw8-chip" id="fw8-chip1" style="left: 240px; top: 396px">
+              trace-0141.jsonl
+            </div>
+            <div class="fw8-chip" id="fw8-chip2" style="left: 252px; top: 448px">
+              trace-0142.jsonl
+            </div>
+            <div class="fw8-chip" id="fw8-chip3" style="left: 264px; top: 500px">
+              trace-0143.jsonl
+            </div>
+
+            <svg class="fw8-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+              <path
+                id="fw8-flowarc"
+                d="M 418 468 C 470 412, 535 408, 588 452"
+                fill="none"
+                stroke="#1F2BE0"
+                stroke-width="3"
+              />
+              <path
+                id="fw8-flowdash"
+                d="M 418 468 C 470 412, 535 408, 588 452"
+                fill="none"
+                stroke="#1F2BE0"
+                stroke-width="3"
+                stroke-dasharray="10 14"
+                stroke-dashoffset="0"
+                opacity="0"
+              />
+            </svg>
+
+            <div class="fw8-lora-card" id="fw8-lora">LoRA</div>
+            <div class="fw8-tinker-tag" id="fw8-tinker">Tinker &middot; LoRA fine-tuning</div>
+          </div>
+
+          <!-- ring arcs + closing sweep (center 960,505 · r 270) -->
+          <svg class="fw8-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <path
+              id="fw8-s1"
+              d="M 960 235 A 270 270 0 0 1 1216.8 421.6"
+              fill="none"
+              stroke="#1F2BE0"
+              stroke-width="3"
+            />
+            <path
+              id="fw8-s2"
+              d="M 1216.8 421.6 A 270 270 0 0 1 1118.7 723.4"
+              fill="none"
+              stroke="#1F2BE0"
+              stroke-width="3"
+            />
+            <path
+              id="fw8-s3"
+              d="M 1118.7 723.4 A 270 270 0 0 1 801.3 723.4"
+              fill="none"
+              stroke="#1F2BE0"
+              stroke-width="3"
+            />
+            <path
+              id="fw8-s4"
+              d="M 801.3 723.4 A 270 270 0 0 1 703.2 421.6"
+              fill="none"
+              stroke="#1F2BE0"
+              stroke-width="3"
+            />
+            <path
+              id="fw8-s5"
+              d="M 703.2 421.6 A 270 270 0 0 1 960 235"
+              fill="none"
+              stroke="#1F2BE0"
+              stroke-width="3"
+            />
+            <path
+              id="fw8-sweep"
+              d="M 960 235 A 270 270 0 0 1 960 775 A 270 270 0 0 1 960 235"
+              fill="none"
+              stroke="#1F2BE0"
+              stroke-width="6"
+              stroke-dasharray="240 1456.5"
+              stroke-dashoffset="0"
+              opacity="0"
+            />
+          </svg>
+
+          <!-- vLLM chip assembly (glides to ring center on Scene 3) -->
+          <div class="fw8-vllm" id="fw8-vllm">
+            <svg
+              class="fw8-svg"
+              viewBox="0 0 360 300"
+              xmlns="http://www.w3.org/2000/svg"
+              style="width: 360px; height: 300px"
+            >
+              <rect
+                x="80"
+                y="64"
+                width="200"
+                height="150"
+                fill="#E6E0CE"
+                stroke="#1F2BE0"
+                stroke-width="2.5"
+              />
+              <line x1="60" y1="100" x2="80" y2="100" stroke="#1F2BE0" stroke-width="2.5" />
+              <line x1="60" y1="130" x2="80" y2="130" stroke="#1F2BE0" stroke-width="2.5" />
+              <line x1="60" y1="160" x2="80" y2="160" stroke="#1F2BE0" stroke-width="2.5" />
+              <line x1="60" y1="190" x2="80" y2="190" stroke="#1F2BE0" stroke-width="2.5" />
+              <line x1="280" y1="100" x2="300" y2="100" stroke="#1F2BE0" stroke-width="2.5" />
+              <line x1="280" y1="130" x2="300" y2="130" stroke="#1F2BE0" stroke-width="2.5" />
+              <line x1="280" y1="160" x2="300" y2="160" stroke="#1F2BE0" stroke-width="2.5" />
+              <line x1="280" y1="190" x2="300" y2="190" stroke="#1F2BE0" stroke-width="2.5" />
+            </svg>
+            <div class="fw8-slot" id="fw8-slot"></div>
+            <div class="fw8-adapter" id="fw8-adapter">LoRA adapter</div>
+            <div class="fw8-vllm-name">vLLM</div>
+            <div class="fw8-vllm-tag" id="fw8-vllm-tag">vLLM &middot; --enable-lora</div>
+          </div>
+
+          <!-- five stage nodes (revealed one per spoken cue) -->
+          <div class="fw8-node" id="fw8-n1" style="left: 832px; top: 193px">
+            <span class="fw8-node-num">01</span>
+            <span class="fw8-node-name" id="fw8-name1">Inference</span>
+          </div>
+          <div class="fw8-node" id="fw8-n2" style="left: 1089px; top: 380px">
+            <span class="fw8-node-num">02</span>
+            <span class="fw8-node-name" id="fw8-name2">Traces</span>
+          </div>
+          <div class="fw8-node" id="fw8-n3" style="left: 991px; top: 681px">
+            <span class="fw8-node-num">03</span>
+            <span class="fw8-node-name" id="fw8-name3">Evals</span>
+          </div>
+          <div class="fw8-node" id="fw8-n4" style="left: 673px; top: 681px">
+            <span class="fw8-node-num">04</span>
+            <span class="fw8-node-name" id="fw8-name4">LoRA</span>
+          </div>
+          <div class="fw8-node" id="fw8-n5" style="left: 545px; top: 380px; width: 316px">
+            <span class="fw8-node-num">05</span>
+            <span class="fw8-node-name" id="fw8-name5">Better inference</span>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+        (function () {
+          var DUR = 12.843;
+          var tl = gsap.timeline({ paused: true });
+
+          /* --- svg-path-draw setup: measure each solid path, hide via dashoffset --- */
+          var drawIds = ["fw8-flowarc", "fw8-s1", "fw8-s2", "fw8-s3", "fw8-s4", "fw8-s5"];
+          drawIds.forEach(function (id) {
+            var p = document.getElementById(id);
+            var len = p.getTotalLength() * 1.02;
+            p.style.strokeDasharray = String(len);
+            p.style.strokeDashoffset = String(len);
+          });
+          function draw(id, at, dur) {
+            tl.to("#" + id, { strokeDashoffset: 0, duration: dur, ease: "power2.out" }, at);
+          }
+
+          /* ================= Scene 1 (0–2.75s) — "That data trains a communication
+             LoRA on Tinker": chips flow along a drawn arc into the LoRA node ======= */
+          tl.fromTo(
+            "#fw8-chip1",
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+            0.15
+          );
+          tl.fromTo(
+            "#fw8-chip2",
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+            0.32
+          );
+          tl.fromTo(
+            "#fw8-chip3",
+            { opacity: 0, y: 16 },
+            { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+            0.49
+          );
+
+          draw("fw8-flowarc", 0.55, 0.7);
+
+          /* LoRA node seats as "LoRA" is spoken */
+          tl.fromTo(
+            "#fw8-lora",
+            { opacity: 0, y: 14 },
+            { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+            0.95
+          );
+
+          /* dash-flow (svg-icon-enrichment): finite, linear, integer dash periods */
+          tl.fromTo(
+            "#fw8-flowdash",
+            { opacity: 0 },
+            { opacity: 0.7, duration: 0.2, ease: "power1.out" },
+            1.05
+          );
+          tl.to("#fw8-flowdash", { strokeDashoffset: -240, duration: 1.8, ease: "none" }, 1.05);
+
+          /* "on Tinker" */
+          tl.fromTo(
+            "#fw8-tinker",
+            { opacity: 0, y: 8 },
+            { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+            1.65
+          );
+
+          /* absorb blip on the LoRA node — smooth, no bounce */
+          tl.to("#fw8-lora", { scale: 1.03, duration: 0.22, ease: "power2.inOut" }, 2.05);
+          tl.to("#fw8-lora", { scale: 1, duration: 0.3, ease: "power2.out" }, 2.27);
+
+          /* ================= Scene 2 (2.75–5.5s) — "hot-loads straight onto our
+             inference layer": adapter chip slides onto the vLLM chip and seats ===== */
+          tl.fromTo(
+            "#fw8-vllm",
+            { opacity: 0, y: 18 },
+            { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" },
+            2.85
+          );
+          tl.fromTo(
+            "#fw8-vllm-tag",
+            { opacity: 0, y: 8 },
+            { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+            3.25
+          );
+
+          /* card-morph-anchor: the adapter is the moving anchor — it appears at the
+             LoRA node, morphs down to slot size while it slides, then click-seats */
+          tl.fromTo(
+            "#fw8-adapter",
+            { x: -600, y: 29, scaleX: 1.28, scaleY: 1.3, opacity: 0 },
+            { opacity: 1, duration: 0.3, ease: "power2.out" },
+            3.1
+          );
+          tl.to(
+            "#fw8-adapter",
+            { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 1.05, ease: "power3.inOut" },
+            3.5
+          );
+          /* single click settle on seat */
+          tl.fromTo(
+            "#fw8-adapter",
+            { scale: 1.045 },
+            { scale: 1, duration: 0.22, ease: "power3.out" },
+            4.6
+          );
+          tl.to(
+            "#fw8-slot",
+            { borderColor: "rgba(31,43,224,1)", duration: 0.25, ease: "power2.out" },
+            4.55
+          );
+
+          /* ================= Scene 3 (5.5–10.09s) — five signposted beats:
+             Inference. Traces. Evals. LoRA. Better inference. ===================== */
+          /* the training pipeline recedes to a ghost; the vLLM core takes ring center */
+          tl.to("#fw8-dimmable", { opacity: 0.13, duration: 0.8, ease: "power2.inOut" }, 5.5);
+          tl.to(
+            "#fw8-vllm",
+            { x: -330, y: 35, scale: 0.8, duration: 0.9, ease: "power3.inOut" },
+            5.5
+          );
+
+          var cues = [5.78, 6.61, 7.43, 8.26, 9.08];
+          cues.forEach(function (cue, i) {
+            tl.fromTo(
+              "#fw8-n" + (i + 1),
+              { opacity: 0, y: 16, scale: 0.97 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "power3.out" },
+              cue
+            );
+          });
+          /* each connecting arc self-draws into the node being spoken */
+          draw("fw8-s1", 6.46, 0.5);
+          draw("fw8-s2", 7.28, 0.5);
+          draw("fw8-s3", 8.11, 0.5);
+          draw("fw8-s4", 8.93, 0.5);
+
+          /* ================= Scene 4 (10.09–12.843s) — "The loop closes":
+             final arc completes the circle; one finite sweep, then stillness ====== */
+          draw("fw8-s5", 10.35, 0.6);
+          tl.fromTo(
+            "#fw8-sweep",
+            { opacity: 0 },
+            { opacity: 0.95, duration: 0.18, ease: "power1.out" },
+            10.95
+          );
+          tl.to(
+            "#fw8-sweep",
+            { strokeDashoffset: -1696.5, duration: 1.45, ease: "power1.inOut" },
+            10.95
+          );
+          tl.to("#fw8-sweep", { opacity: 0, duration: 0.25, ease: "power1.in" }, 12.28);
+
+          /* --- asr-keyword-glow: attack/sustain/release envelope per node label --- */
+          var GLOW = {
+            "fw8-name1": [
+              [5.78, 6.35],
+              [10.95, 11.65],
+            ],
+            "fw8-name2": [[6.61, 7.15]],
+            "fw8-name3": [[7.43, 7.98]],
+            "fw8-name4": [[8.26, 8.8]],
+            "fw8-name5": [[9.08, 9.85]],
+          };
+          var ATTACK = 0.15,
+            RELEASE = 0.45,
+            REST = 0.22,
+            MAX_BLUR = 16,
+            MAX_SCALE = 0.05;
+          var glowEls = Object.keys(GLOW).map(function (id) {
+            return document.getElementById(id);
+          });
+          function envAt(t, wins) {
+            var e = 0;
+            for (var i = 0; i < wins.length; i++) {
+              var s = wins[i][0],
+                en = wins[i][1],
+                v = 0;
+              if (t >= s) {
+                if (t < en) v = Math.min((t - s) / ATTACK, 1);
+                else if (t < en + RELEASE) v = 1 - ((t - en) / RELEASE) * (1 - REST);
+                else v = REST;
+              }
+              if (v > e) e = v;
+            }
+            return e;
+          }
+          var drv = { t: 0 };
+          tl.to(
+            drv,
+            {
+              t: DUR,
+              duration: DUR,
+              ease: "none",
+              onUpdate: function () {
+                for (var i = 0; i < glowEls.length; i++) {
+                  var el = glowEls[i];
+                  var e = envAt(drv.t, GLOW[el.id]);
+                  el.style.textShadow =
+                    "0 0 " + (MAX_BLUR * e).toFixed(1) + "px rgba(31,43,224," + (0.55 * e).toFixed(3) + ")";
+                  el.style.transform = "scale(" + (1 + MAX_SCALE * e).toFixed(4) + ")";
+                }
+              },
+            },
+            0
+          );
+
+          window.__timelines["08-the-flywheel-closes"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

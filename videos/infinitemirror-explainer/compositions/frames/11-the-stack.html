@@ -1,0 +1,375 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 11 — The stack</title>
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          font-style: normal;
+          font-weight: 400;
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+        }
+        @font-face {
+          font-family: "Newsreader";
+          font-style: italic;
+          font-weight: 400;
+          src: url("assets/fonts/newsreader-400-italic.woff2") format("woff2");
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          font-style: normal;
+          font-weight: 400;
+          src: url("assets/fonts/hanken-grotesk-400.woff2") format("woff2");
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          font-style: normal;
+          font-weight: 600;
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+        }
+        @font-face {
+          font-family: "DM Mono";
+          font-style: normal;
+          font-weight: 400;
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+        }
+
+        #root {
+          position: relative;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          container-type: size;
+        }
+
+        /* ---- ground: paper + permanent graph grid + hairlines (full-bleed clip) ---- */
+        .f11-bg {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 2cqw 2cqw;
+        }
+        .f11-hairline {
+          position: absolute;
+          left: 4cqw;
+          right: 4cqw;
+          height: 0.12cqw;
+          background: #1f2be0;
+        }
+        .f11-hairline-top {
+          top: 3cqw;
+        }
+        .f11-hairline-bottom {
+          bottom: 3cqw;
+        }
+
+        /* ---- content layer ---- */
+        .f11-content {
+          position: absolute;
+          inset: 0;
+        }
+
+        /* topbar-rule: headline-index + mono-tag over a cobalt rule */
+        .f11-topbar {
+          position: absolute;
+          left: 4cqw;
+          right: 4cqw;
+          top: 6.2cqw;
+        }
+        .f11-topbar-row {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+        }
+        .f11-title {
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 5cqw;
+          line-height: 0.95;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+        }
+        .f11-tag {
+          font-family: "DM Mono", monospace;
+          font-weight: 400;
+          font-size: 0.78cqw;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+        }
+        .f11-underline {
+          margin-top: 1.1cqw;
+          width: 100%;
+          height: 0.12cqw;
+          background: #1f2be0;
+          transform-origin: left center;
+        }
+
+        /* provider grid — 3 x 2, keep-out safe (bottom edge ~881px) */
+        .f11-grid {
+          position: absolute;
+          left: 4cqw;
+          right: 4cqw;
+          top: 15.4cqw;
+          height: 30.5cqw;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          grid-template-rows: 1fr 1fr;
+          gap: 2cqw;
+        }
+        .f11-cell {
+          position: relative;
+        }
+        .f11-ghost {
+          position: absolute;
+          inset: 0;
+          border: 1px solid rgba(31, 43, 224, 0.18);
+        }
+        .f11-tile {
+          position: absolute;
+          inset: 0;
+          background: #e6e0ce;
+          border: 0.12cqw solid #1f2be0;
+          padding: 1.2cqw 1.5cqw 1.2cqw;
+          display: flex;
+          flex-direction: column;
+          transform-origin: 50% 50%;
+          will-change: transform;
+        }
+        .f11-num {
+          font-family: "DM Mono", monospace;
+          font-weight: 400;
+          font-size: 0.78cqw;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+        }
+        .f11-name {
+          margin-top: 0.8cqw;
+          font-family: "Newsreader", serif;
+          font-weight: 400;
+          font-size: 2.5cqw;
+          line-height: 1.05;
+          letter-spacing: -0.005em;
+          color: #1f2be0;
+        }
+        .f11-rule {
+          margin-top: auto;
+          width: 100%;
+          height: 1px;
+          background: rgba(31, 43, 224, 0.18);
+        }
+        .f11-role {
+          margin-top: 0.85cqw;
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 0.85cqw;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #1f2be0;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="11-the-stack"
+        data-width="1920"
+        data-height="1080"
+        data-duration="14.388"
+      >
+        <!-- full-bleed ground clip (lowest track) -->
+        <div
+          class="clip f11-bg"
+          data-start="0"
+          data-duration="14.388"
+          data-track-index="0"
+        >
+          <div class="f11-hairline f11-hairline-top"></div>
+          <div class="f11-hairline f11-hairline-bottom"></div>
+        </div>
+
+        <!-- content clip -->
+        <div
+          class="clip f11-content"
+          data-start="0"
+          data-duration="14.388"
+          data-track-index="1"
+        >
+          <div class="f11-topbar">
+            <div class="f11-topbar-row">
+              <div class="f11-title" id="f11-title">THE STACK</div>
+              <div class="f11-tag" id="f11-tag">STACK / 06 PROVIDERS</div>
+            </div>
+            <div class="f11-underline" id="f11-underline"></div>
+          </div>
+
+          <div class="f11-grid">
+            <div class="f11-cell">
+              <div class="f11-ghost"></div>
+              <div class="f11-tile" id="f11-tile-nexla">
+                <div class="f11-num">01</div>
+                <div class="f11-name">Nexla</div>
+                <div class="f11-rule"></div>
+                <div class="f11-role">Agent-queryable assets</div>
+              </div>
+            </div>
+            <div class="f11-cell">
+              <div class="f11-ghost"></div>
+              <div class="f11-tile" id="f11-tile-zero">
+                <div class="f11-num">02</div>
+                <div class="f11-name">zero.xyz</div>
+                <div class="f11-rule"></div>
+                <div class="f11-role">Reasoning marketplace</div>
+              </div>
+            </div>
+            <div class="f11-cell">
+              <div class="f11-ghost"></div>
+              <div class="f11-tile" id="f11-tile-gbrain">
+                <div class="f11-num">03</div>
+                <div class="f11-name">GBrain</div>
+                <div class="f11-rule"></div>
+                <div class="f11-role">Per-client memory</div>
+              </div>
+            </div>
+            <div class="f11-cell">
+              <div class="f11-ghost"></div>
+              <div class="f11-tile" id="f11-tile-pomerium">
+                <div class="f11-num">04</div>
+                <div class="f11-name">Pomerium</div>
+                <div class="f11-rule"></div>
+                <div class="f11-role">Session-scoped access</div>
+              </div>
+            </div>
+            <div class="f11-cell">
+              <div class="f11-ghost"></div>
+              <div class="f11-tile" id="f11-tile-akash">
+                <div class="f11-num">05</div>
+                <div class="f11-name">Akash</div>
+                <div class="f11-rule"></div>
+                <div class="f11-role">Inference hosting</div>
+              </div>
+            </div>
+            <div class="f11-cell">
+              <div class="f11-ghost"></div>
+              <div class="f11-tile" id="f11-tile-tinker">
+                <div class="f11-num">06</div>
+                <div class="f11-name">Tinker</div>
+                <div class="f11-rule"></div>
+                <div class="f11-role">Training loop</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+
+          /* ------------------------------------------------------------------
+           * Scene 1 (0.0–2.4) — "Under the hood": topbar draws; zero.xyz
+           * (already met in Frame 4) seats quietly at ink-faint weight.
+           * VO cues (word-level, frame-relative):
+           *   under 0.10 · Nexla 1.26 · GBrain 5.31 · Pomerium 7.76
+           *   Akash 10.04 · Tinker 12.16 · "loop." ends 13.76
+           * ------------------------------------------------------------------ */
+          tl.fromTo(
+            "#f11-title",
+            { opacity: 0, y: 26 },
+            { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" },
+            0.1
+          );
+          tl.fromTo(
+            "#f11-underline",
+            { scaleX: 0 },
+            { scaleX: 1, duration: 0.7, ease: "power3.out" },
+            0.22
+          );
+          tl.fromTo(
+            "#f11-tag",
+            { opacity: 0, x: 14 },
+            { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" },
+            0.38
+          );
+
+          /* empty grid region established — ghost slots fade up, index-staggered */
+          gsap.utils.toArray(".f11-ghost").forEach(function (el, i) {
+            tl.fromTo(
+              el,
+              { opacity: 0 },
+              { opacity: 1, duration: 0.45, ease: "power2.out" },
+              0.35 + i * 0.06
+            );
+          });
+
+          /* zero.xyz seats first, quietly, at ink-faint weight */
+          tl.fromTo(
+            "#f11-tile-zero",
+            { opacity: 0, y: 16, scale: 0.97 },
+            { opacity: 0.38, y: 0, scale: 1, duration: 0.75, ease: "power3.out" },
+            0.6
+          );
+
+          /* ------------------------------------------------------------------
+           * Scene 2 (≈1.3–12.7) — VO-cued cascade: each provider tile arrives
+           * on its spoken name (spring-pop-entrance, smooth power3 settle);
+           * the freshly-landed tile holds full ink while the previous one
+           * eases to ink-soft weight — the eye always on the spoken one.
+           * ------------------------------------------------------------------ */
+          var cues = [
+            ["#f11-tile-nexla", 1.26],
+            ["#f11-tile-gbrain", 5.31],
+            ["#f11-tile-pomerium", 7.76],
+            ["#f11-tile-akash", 10.04],
+            ["#f11-tile-tinker", 12.16],
+          ];
+          cues.forEach(function (cue, i) {
+            var sel = cue[0];
+            var at = cue[1];
+            /* spring-pop-entrance: fromTo scale 0 -> 1, small y rise, no overshoot */
+            tl.fromTo(
+              sel,
+              { scale: 0, opacity: 0, y: 24 },
+              { scale: 1, opacity: 1, y: 0, duration: 0.55, ease: "power3.out" },
+              at
+            );
+            /* role label lands a breath after the name */
+            tl.fromTo(
+              sel + " .f11-role",
+              { opacity: 0, y: 8 },
+              { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
+              at + 0.22
+            );
+            /* previous tile eases to ink-soft weight as this one lands */
+            if (i > 0) {
+              tl.to(
+                cues[i - 1][0],
+                { opacity: 0.55, duration: 0.45, ease: "power2.out" },
+                at
+              );
+            }
+          });
+
+          /* ------------------------------------------------------------------
+           * Scene 3 (≈13.05–end) — all six settle to equal weight; held read.
+           * No exit — the push-slide transition on the next frame is the exit.
+           * ------------------------------------------------------------------ */
+          tl.to(
+            ".f11-tile",
+            { opacity: 1, duration: 0.6, ease: "power2.out" },
+            13.05
+          );
+
+          window.__timelines["11-the-stack"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #F0EBDE;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="145.024"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div
+        id="el-01-agents-learn-nothing"
+        class="scene"
+        data-composition-id="01-agents-learn-nothing"
+        data-composition-src="compositions/frames/01-agents-learn-nothing.html"
+        data-start="0"
+        data-duration="7.796"
+        data-track-index="0"
+      ></div>
+      <audio
+        id="el-01-agents-learn-nothing-voice"
+        src="assets/voice/01.wav"
+        data-start="0"
+        data-duration="7.296"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-02-introducing-infinitemirror"
+        class="scene"
+        data-composition-id="02-introducing-infinitemirror"
+        data-composition-src="compositions/frames/02-introducing-infinitemirror.html"
+        data-start="7.296"
+        data-duration="10.975"
+        data-track-index="1"
+      ></div>
+      <audio
+        id="el-02-introducing-infinitemirror-voice"
+        src="assets/voice/02.wav"
+        data-start="7.296"
+        data-duration="10.475"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-03-behind-the-mirror"
+        class="scene"
+        data-composition-id="03-behind-the-mirror"
+        data-composition-src="compositions/frames/03-behind-the-mirror.html"
+        data-start="17.771"
+        data-duration="13.215"
+        data-track-index="0"
+      ></div>
+      <audio
+        id="el-03-behind-the-mirror-voice"
+        src="assets/voice/03.wav"
+        data-start="17.771"
+        data-duration="12.715"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-04-reasoning-for-sale"
+        class="scene"
+        data-composition-id="04-reasoning-for-sale"
+        data-composition-src="compositions/frames/04-reasoning-for-sale.html"
+        data-start="30.486"
+        data-duration="11.349"
+        data-track-index="1"
+      ></div>
+      <audio
+        id="el-04-reasoning-for-sale-voice"
+        src="assets/voice/04.wav"
+        data-start="30.486"
+        data-duration="11.349"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-05-the-owned-harness"
+        class="scene"
+        data-composition-id="05-the-owned-harness"
+        data-composition-src="compositions/frames/05-the-owned-harness.html"
+        data-start="41.835"
+        data-duration="9.652"
+        data-track-index="0"
+      ></div>
+      <audio
+        id="el-05-the-owned-harness-voice"
+        src="assets/voice/05.wav"
+        data-start="41.835"
+        data-duration="9.152"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-06-skill-cards"
+        class="scene"
+        data-composition-id="06-skill-cards"
+        data-composition-src="compositions/frames/06-skill-cards.html"
+        data-start="50.987"
+        data-duration="11.401"
+        data-track-index="1"
+      ></div>
+      <audio
+        id="el-06-skill-cards-voice"
+        src="assets/voice/06.wav"
+        data-start="50.987"
+        data-duration="10.901"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-07-traces-and-evals"
+        class="scene"
+        data-composition-id="07-traces-and-evals"
+        data-composition-src="compositions/frames/07-traces-and-evals.html"
+        data-start="61.888000000000005"
+        data-duration="12.724"
+        data-track-index="0"
+      ></div>
+      <audio
+        id="el-07-traces-and-evals-voice"
+        src="assets/voice/07.wav"
+        data-start="61.888000000000005"
+        data-duration="12.224"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-08-the-flywheel-closes"
+        class="scene"
+        data-composition-id="08-the-flywheel-closes"
+        data-composition-src="compositions/frames/08-the-flywheel-closes.html"
+        data-start="74.11200000000001"
+        data-duration="13.343"
+        data-track-index="1"
+      ></div>
+      <audio
+        id="el-08-the-flywheel-closes-voice"
+        src="assets/voice/08.wav"
+        data-start="74.11200000000001"
+        data-duration="12.843"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-09-compounding-intelligence"
+        class="scene"
+        data-composition-id="09-compounding-intelligence"
+        data-composition-src="compositions/frames/09-compounding-intelligence.html"
+        data-start="86.95500000000001"
+        data-duration="10.661"
+        data-track-index="0"
+      ></div>
+      <audio
+        id="el-09-compounding-intelligence-voice"
+        src="assets/voice/09.wav"
+        data-start="86.95500000000001"
+        data-duration="10.261"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-10-live-demo"
+        class="scene"
+        data-composition-id="10-live-demo"
+        data-composition-src="compositions/frames/10-live-demo.html"
+        data-start="97.21600000000001"
+        data-duration="11.913"
+        data-track-index="1"
+      ></div>
+      <audio
+        id="el-10-live-demo-voice"
+        src="assets/voice/10.wav"
+        data-start="97.21600000000001"
+        data-duration="11.413"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-11-the-stack"
+        class="scene"
+        data-composition-id="11-the-stack"
+        data-composition-src="compositions/frames/11-the-stack.html"
+        data-start="108.629"
+        data-duration="14.388"
+        data-track-index="0"
+      ></div>
+      <audio
+        id="el-11-the-stack-voice"
+        src="assets/voice/11.wav"
+        data-start="108.629"
+        data-duration="13.888"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-12-assets-get-physical"
+        class="scene"
+        data-composition-id="12-assets-get-physical"
+        data-composition-src="compositions/frames/12-assets-get-physical.html"
+        data-start="122.51700000000001"
+        data-duration="12.276"
+        data-track-index="1"
+      ></div>
+      <audio
+        id="el-12-assets-get-physical-voice"
+        src="assets/voice/12.wav"
+        data-start="122.51700000000001"
+        data-duration="11.776"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-13-the-one-line"
+        class="scene"
+        data-composition-id="13-the-one-line"
+        data-composition-src="compositions/frames/13-the-one-line.html"
+        data-start="134.293"
+        data-duration="4.331"
+        data-track-index="0"
+      ></div>
+      <audio
+        id="el-13-the-one-line-voice"
+        src="assets/voice/13.wav"
+        data-start="134.293"
+        data-duration="4.331"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <div
+        id="el-14-see-it-live"
+        class="scene"
+        data-composition-id="14-see-it-live"
+        data-composition-src="compositions/frames/14-see-it-live.html"
+        data-start="138.624"
+        data-duration="6.4"
+        data-track-index="1"
+      ></div>
+      <audio
+        id="el-14-see-it-live-voice"
+        src="assets/voice/14.wav"
+        data-start="138.624"
+        data-duration="6.4"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
+
+      <!-- captions -->
+      <div
+        id="el-captions"
+        class="scene"
+        data-composition-id="captions"
+        data-composition-src="compositions/captions.html"
+        data-start="0"
+        data-duration="145.024"
+        data-track-index="2"
+      ></div>
+
+      <!-- SFX -->
+      <audio
+        id="el-sfx-0"
+        src="assets/sfx/click.mp3"
+        data-start="50.987"
+        data-duration="0.37"
+        data-track-index="20"
+        data-volume="0.35"
+      ></audio>
+      <audio
+        id="el-sfx-1"
+        src="assets/sfx/click.mp3"
+        data-start="74.112"
+        data-duration="0.37"
+        data-track-index="21"
+        data-volume="0.35"
+      ></audio>
+      <audio
+        id="el-sfx-2"
+        src="assets/sfx/click.mp3"
+        data-start="138.624"
+        data-duration="0.37"
+        data-track-index="22"
+        data-volume="0.35"
+      ></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+      // ── frame transitions (injected by transitions.mjs) ──
+      (function () { var tl = window.__timelines["main"];
+        tl.to("#el-01-agents-learn-nothing", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 7.296);
+        tl.fromTo("#el-02-introducing-infinitemirror", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 7.296);
+        tl.to("#el-02-introducing-infinitemirror", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 17.771);
+        tl.fromTo("#el-03-behind-the-mirror", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 17.771);
+        tl.to("#el-03-behind-the-mirror", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 30.486);
+        tl.fromTo("#el-04-reasoning-for-sale", { x: 1920, opacity: 1 }, { x: 0, duration: 0.5, ease: "power3.inOut" }, 30.486);
+        tl.to("#el-05-the-owned-harness", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 50.987);
+        tl.fromTo("#el-06-skill-cards", { x: 1920, opacity: 1 }, { x: 0, duration: 0.5, ease: "power3.inOut" }, 50.987);
+        tl.to("#el-06-skill-cards", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 61.888);
+        tl.fromTo("#el-07-traces-and-evals", { x: 1920, opacity: 1 }, { x: 0, duration: 0.5, ease: "power3.inOut" }, 61.888);
+        tl.to("#el-07-traces-and-evals", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 74.112);
+        tl.fromTo("#el-08-the-flywheel-closes", { x: 1920, opacity: 1 }, { x: 0, duration: 0.5, ease: "power3.inOut" }, 74.112);
+        tl.to("#el-08-the-flywheel-closes", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 86.955);
+        tl.fromTo("#el-09-compounding-intelligence", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 86.955);
+        tl.to("#el-09-compounding-intelligence", { scale: 2.5, opacity: 0, filter: "blur(8px)", duration: 0.4, ease: "power3.in" }, 97.216);
+        tl.fromTo("#el-10-live-demo", { scale: 0.5, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, 97.216);
+        tl.to("#el-10-live-demo", { x: -1920, duration: 0.5, ease: "power3.inOut" }, 108.629);
+        tl.fromTo("#el-11-the-stack", { x: 1920, opacity: 1 }, { x: 0, duration: 0.5, ease: "power3.inOut" }, 108.629);
+        tl.to("#el-11-the-stack", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 122.517);
+        tl.fromTo("#el-12-assets-get-physical", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 122.517);
+        tl.to("#el-12-assets-get-physical", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 134.293);
+        tl.fromTo("#el-13-the-one-line", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 134.293);
+        tl.to({}, { duration: 145.024 }, 0); // full-span anchor — main.duration() == composition total (Studio master duration)
+      })();
+    </script>
+  </body>
+</html>

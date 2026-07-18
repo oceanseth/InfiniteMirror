@@ -1,0 +1,428 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Frame 09 — Compounding intelligence</title>
+    <!-- head is source-file metadata only; the runtime clones ONLY <template> contents -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400-italic.woff2") format("woff2");
+          font-weight: 400;
+          font-style: italic;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        /* Root styled via #root (never a class on the data-composition-id element) */
+        #root {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          overflow: hidden;
+          container-type: size;
+        }
+
+        /* ---- ground: paper + permanent graph grid + hairlines (full-bleed clip layer) ---- */
+        .ground {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 2cqw 2cqw;
+        }
+        .hairline {
+          position: absolute;
+          left: 4cqw;
+          right: 4cqw;
+          height: 0.12cqw;
+          background: #1f2be0;
+        }
+        .hairline.top {
+          top: 3cqw;
+        }
+        .hairline.bottom {
+          bottom: 3cqw;
+        }
+
+        /* ---- stage (chart plane, curve, callout) ---- */
+        .stage,
+        .ringlayer {
+          position: absolute;
+          inset: 0;
+        }
+        .stage-svg,
+        .ring-svg {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+
+        .axis {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 2.4;
+          stroke-linecap: butt;
+        }
+        .axis-arrow {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 2.4;
+          stroke-linecap: butt;
+          opacity: 0;
+        }
+        .curve {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 5;
+          stroke-linecap: butt;
+          stroke-linejoin: miter;
+        }
+        .tick {
+          fill: #1f2be0;
+          opacity: 0;
+        }
+
+        .axis-label {
+          position: absolute;
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+        .axis-label.x {
+          right: 10cqw;
+          top: 822px;
+        }
+        .axis-label.y {
+          left: 138px;
+          top: 430px;
+          writing-mode: vertical-rl;
+          transform: rotate(180deg);
+        }
+
+        .callout {
+          position: absolute;
+          left: 880px;
+          top: 632px;
+          width: 700px;
+          text-align: center;
+          font-family: "Newsreader", serif;
+          font-style: italic;
+          font-weight: 400;
+          font-size: 2.6cqw;
+          line-height: 1.1;
+          color: #1f2be0;
+          will-change: transform;
+        }
+        .callout .w {
+          display: inline-block;
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+
+        /* ---- loop-ring swap (Frame 8 callback → corner badge) ---- */
+        .ring-stroke {
+          fill: none;
+          stroke: #1f2be0;
+          stroke-width: 5;
+        }
+        .ring-node {
+          fill: #f0ebde;
+          stroke: #1f2be0;
+          stroke-width: 3;
+        }
+        .badge {
+          position: absolute;
+          left: 100px;
+          top: 92px;
+          width: 140px;
+          height: 158px;
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+        .badge-svg {
+          display: block;
+          width: 140px;
+          height: 130px;
+        }
+        .badge .ring-stroke {
+          stroke-width: 3;
+        }
+        .badge .ring-node {
+          stroke-width: 2;
+        }
+        .badge-label {
+          margin-top: 4px;
+          text-align: center;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.08em;
+          color: #1f2be0;
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="09-compounding-intelligence"
+        data-width="1920"
+        data-height="1080"
+        data-duration="10.661"
+      >
+        <!-- full-bleed ground clip: paper + grid + hairlines -->
+        <div
+          id="f09-ground"
+          class="clip ground"
+          data-start="0"
+          data-duration="10.661"
+          data-track-index="0"
+        >
+          <div class="hairline top"></div>
+          <div class="hairline bottom"></div>
+        </div>
+
+        <!-- chart stage clip -->
+        <div
+          id="f09-stage"
+          class="clip stage"
+          data-start="0"
+          data-duration="10.661"
+          data-track-index="1"
+        >
+          <svg class="stage-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <!-- axes pick out two grid lines in ink (grid cell = 38.4px) -->
+            <path id="f09-axis-x" class="axis" d="M 192 806.4 L 1728 806.4" />
+            <path id="f09-axis-y" class="axis" d="M 192 806.4 L 192 345.6" />
+            <path id="f09-arrow-x" class="axis-arrow" d="M 1712 798 L 1728 806.4 L 1712 814.8" />
+            <path id="f09-arrow-y" class="axis-arrow" d="M 184 361 L 192 345.6 L 200 361" />
+            <!-- the compounding curve: visibly steepening left → right -->
+            <path
+              id="f09-curve"
+              class="curve"
+              d="M 192 806.4 C 400 798, 620 775, 850 720 C 1060 668, 1220 590, 1360 480 C 1460 400, 1580 320, 1690 240"
+            />
+            <!-- conversation tick marks: positions computed onto the curve at init -->
+            <g id="f09-ticks">
+              <rect class="tick" width="9" height="9"></rect>
+              <rect class="tick" width="9" height="9"></rect>
+              <rect class="tick" width="9" height="9"></rect>
+              <rect class="tick" width="9" height="9"></rect>
+              <rect class="tick" width="9" height="9"></rect>
+              <rect class="tick" width="9" height="9"></rect>
+              <rect class="tick" width="9" height="9"></rect>
+            </g>
+          </svg>
+
+          <div id="f09-label-x" class="axis-label x">CONVERSATIONS</div>
+          <div id="f09-label-y" class="axis-label y">CAPABILITY</div>
+
+          <div id="f09-callout" class="callout">
+            <span class="w">agentic</span>
+            <span class="w">economy</span>
+            <span class="w">optimization</span>
+          </div>
+        </div>
+
+        <!-- loop-ring layer clip: Frame 8 callback shrinking to the corner badge -->
+        <div
+          id="f09-ringlayer"
+          class="clip ringlayer"
+          data-start="0"
+          data-duration="10.661"
+          data-track-index="2"
+        >
+          <svg class="ring-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <g id="f09-bigring">
+              <circle class="ring-stroke" cx="960" cy="454" r="290" />
+              <rect class="ring-node" x="950" y="154" width="20" height="20" />
+              <rect class="ring-node" x="1225.8" y="354.4" width="20" height="20" />
+              <rect class="ring-node" x="1120.5" y="678.6" width="20" height="20" />
+              <rect class="ring-node" x="779.5" y="678.6" width="20" height="20" />
+              <rect class="ring-node" x="674.2" y="354.4" width="20" height="20" />
+            </g>
+          </svg>
+
+          <div id="f09-badge" class="badge">
+            <svg class="badge-svg" viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+              <circle class="ring-stroke" cx="70" cy="65" r="50" />
+              <rect class="ring-node" x="66" y="11" width="8" height="8" />
+              <rect class="ring-node" x="113.5" y="45.5" width="8" height="8" />
+              <rect class="ring-node" x="95.4" y="101.4" width="8" height="8" />
+              <rect class="ring-node" x="36.6" y="101.4" width="8" height="8" />
+              <rect class="ring-node" x="18.5" y="45.5" width="8" height="8" />
+            </svg>
+            <div id="f09-badge-label" class="badge-label">THE LOOP</div>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+
+        // ---- svg-path-draw setup: measure real lengths, hide via dashoffset ----
+        const f09DrawPaths = ["#f09-axis-x", "#f09-axis-y", "#f09-curve"];
+        f09DrawPaths.forEach((sel) => {
+          const p = document.querySelector(sel);
+          const len = p.getTotalLength();
+          p.style.strokeDasharray = `${len}`;
+          p.style.strokeDashoffset = `${len}`;
+        });
+
+        // ---- conversation ticks: seat each mark ON the measured curve ----
+        const f09Curve = document.querySelector("#f09-curve");
+        const f09CurveLen = f09Curve.getTotalLength();
+        const F09_TICK_FRACS = [0.14, 0.28, 0.42, 0.56, 0.7, 0.84, 0.97];
+        const f09TickEls = document.querySelectorAll("#f09-ticks .tick");
+        F09_TICK_FRACS.forEach((frac, i) => {
+          const pt = f09Curve.getPointAtLength(frac * f09CurveLen);
+          f09TickEls[i].setAttribute("x", (pt.x - 4.5).toFixed(1));
+          f09TickEls[i].setAttribute("y", (pt.y - 4.5).toFixed(1));
+        });
+
+        const tl = gsap.timeline({ paused: true });
+
+        // ================= Scene 1 (0 – 2.43): ring → badge, chart plane opens =================
+        // scale-swap-transition: outgoing shrinks + drifts toward the badge corner (power2.in),
+        // incoming pops in with a smooth long-tail settle (power3 — no overshoot, per direction).
+        tl.to(
+          "#f09-bigring",
+          {
+            scale: 0.45,
+            x: -550,
+            y: -200,
+            autoAlpha: 0,
+            duration: 0.5,
+            ease: "power2.in",
+            transformOrigin: "50% 50%",
+          },
+          0.35,
+        );
+        tl.fromTo(
+          "#f09-badge",
+          { autoAlpha: 0, scale: 0.7 },
+          { autoAlpha: 1, scale: 1, duration: 0.6, ease: "power3.out", transformOrigin: "50% 50%" },
+          0.62,
+        );
+        tl.fromTo(
+          "#f09-badge-label",
+          { autoAlpha: 0, y: 6 },
+          { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" },
+          1.15,
+        );
+
+        // axes self-draw (svg-path-draw), staggered ~75% for continuous motion
+        tl.to("#f09-axis-x", { strokeDashoffset: 0, duration: 0.85, ease: "power2.out" }, 0.95);
+        tl.to("#f09-axis-y", { strokeDashoffset: 0, duration: 0.65, ease: "power2.out" }, 1.3);
+        tl.fromTo(
+          "#f09-arrow-x",
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0.3, ease: "power1.out" },
+          1.8,
+        );
+        tl.fromTo(
+          "#f09-arrow-y",
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0.3, ease: "power1.out" },
+          1.95,
+        );
+        tl.fromTo(
+          "#f09-label-x",
+          { autoAlpha: 0, y: 8 },
+          { autoAlpha: 0.85, y: 0, duration: 0.45, ease: "power3.out" },
+          2.0,
+        );
+        tl.fromTo(
+          "#f09-label-y",
+          { autoAlpha: 0 },
+          { autoAlpha: 0.85, duration: 0.45, ease: "power1.out" },
+          2.12,
+        );
+
+        // ================= Scene 2 (2.43 – 6.16): the compounding curve draws =================
+        // pen-trace draw, constant rate (ease none) — the steepening is in the geometry
+        const F09_CURVE_START = 2.55;
+        const F09_CURVE_DUR = 3.2;
+        tl.to(
+          "#f09-curve",
+          { strokeDashoffset: 0, duration: F09_CURVE_DUR, ease: "none" },
+          F09_CURVE_START,
+        );
+
+        // ticks reveal in sequence as the drawing tip passes each (dynamic-content-sequencing:
+        // start times pre-computed from the same arc-length fractions that placed them)
+        F09_TICK_FRACS.forEach((frac, i) => {
+          tl.fromTo(
+            f09TickEls[i],
+            { autoAlpha: 0, scale: 0.4, transformOrigin: "50% 50%" },
+            { autoAlpha: 1, scale: 1, duration: 0.35, ease: "power3.out" },
+            F09_CURVE_START + frac * F09_CURVE_DUR + 0.05,
+          );
+        });
+
+        // ================= Scene 3 (6.16 – 8.77): callout lands, keyword glow =================
+        // per-word staggered reveal beneath the curve's rise
+        tl.fromTo(
+          "#f09-callout .w",
+          { autoAlpha: 0, y: 18 },
+          { autoAlpha: 1, y: 0, duration: 0.55, ease: "power3.out", stagger: 0.16 },
+          6.2,
+        );
+
+        // asr-keyword-glow: attack–sustain–release envelope fired as "compounds" is spoken,
+        // decaying to a subtle rest glow (breadcrumb) for the held read.
+        const F09_GLOW = { start: 8.25, end: 8.85 };
+        const F09_ATTACK = 0.18;
+        const F09_RELEASE = 0.4;
+        const F09_REST = 0.15;
+        function f09Envelope(t) {
+          const releaseEnd = F09_GLOW.end + F09_RELEASE;
+          if (t < F09_GLOW.start) return 0;
+          if (t < F09_GLOW.end) return Math.min((t - F09_GLOW.start) / F09_ATTACK, 1);
+          if (t < releaseEnd) {
+            const decay = (t - F09_GLOW.end) / F09_RELEASE;
+            return 1 - decay * (1 - F09_REST);
+          }
+          return F09_REST;
+        }
+        const f09CalloutEl = document.getElementById("f09-callout");
+        const f09Driver = { t: 0 };
+        tl.to(
+          f09Driver,
+          {
+            t: 10.261,
+            duration: 10.261,
+            ease: "none",
+            onUpdate: () => {
+              const env = f09Envelope(f09Driver.t);
+              const blur = (24 * env).toFixed(2);
+              const alpha = (0.44 * env).toFixed(3);
+              f09CalloutEl.style.textShadow = `0 0 ${blur}px rgba(31, 43, 224, ${alpha})`;
+              f09CalloutEl.style.transform = `scale(${(1 + 0.03 * env).toFixed(4)})`;
+            },
+          },
+          0,
+        );
+
+        // ================= Scene 4 (8.77 – 10.261): held read — still, no exit =================
+
+        window.__timelines["09-compounding-intelligence"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

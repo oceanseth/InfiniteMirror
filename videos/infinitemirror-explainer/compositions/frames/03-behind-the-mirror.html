@@ -1,0 +1,457 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Frame 3 — Behind the mirror. All render-critical content lives inside <template>. -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "Newsreader";
+          src: url("assets/fonts/newsreader-400-italic.woff2") format("woff2");
+          font-weight: 400;
+          font-style: italic;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "Hanken Grotesk";
+          src: url("assets/fonts/hanken-grotesk-600.woff2") format("woff2");
+          font-weight: 600;
+          font-style: normal;
+          font-display: block;
+        }
+        @font-face {
+          font-family: "DM Mono";
+          src: url("assets/fonts/dm-mono-400.woff2") format("woff2");
+          font-weight: 400;
+          font-style: normal;
+          font-display: block;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          container-type: size;
+        }
+
+        /* ---- ground (full-bleed clip, never on #root) ---- */
+        .f03-ground {
+          position: absolute;
+          inset: 0;
+          background-color: #f0ebde;
+          background-image:
+            linear-gradient(to right, rgba(31, 43, 224, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(31, 43, 224, 0.1) 1px, transparent 1px);
+          background-size: 38.4px 38.4px;
+        }
+        .f03-hairline {
+          position: absolute;
+          left: 77px;
+          right: 77px;
+          height: 2px;
+          background: #1f2be0;
+        }
+        .f03-hairline-top {
+          top: 58px;
+        }
+        .f03-hairline-bottom {
+          top: 1022px;
+        }
+
+        /* ---- stage ---- */
+        .f03-stage-inner {
+          position: absolute;
+          inset: 0;
+        }
+        .f03-diagram {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+
+        /* svg strokes */
+        .f03-diagram .stroke-ink {
+          stroke: #1f2be0;
+          fill: none;
+          stroke-width: 3;
+        }
+        .f03-diagram .stroke-faint {
+          stroke: rgba(31, 43, 224, 0.18);
+          fill: none;
+          stroke-width: 2;
+        }
+
+        /* svg text roles */
+        .f03-diagram .m-tag {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.05em;
+          fill: #1f2be0;
+        }
+        .f03-diagram .m-tag-soft {
+          font-family: "DM Mono", monospace;
+          font-size: 15px;
+          letter-spacing: 0.06em;
+          fill: #5560e5;
+        }
+        .f03-diagram .zone {
+          font-family: "Hanken Grotesk", sans-serif;
+          font-weight: 600;
+          font-size: 16px;
+          letter-spacing: 0.18em;
+          fill: #1f2be0;
+        }
+
+        /* ---- vertical catalogue rail (right edge) ---- */
+        .f03-rail {
+          position: absolute;
+          top: 170px;
+          right: 50px;
+          writing-mode: vertical-rl;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.12em;
+          color: #5560e5;
+        }
+
+        /* ---- reasoning card ---- */
+        .f03-card {
+          position: absolute;
+          left: 1330px;
+          top: 560px;
+          width: 430px;
+          box-sizing: border-box;
+          background: #e6e0ce;
+          border: 2px solid #1f2be0;
+          padding: 18px 22px 16px;
+          will-change: transform, opacity;
+        }
+        .f03-card-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          border-bottom: 2px solid #1f2be0;
+          padding-bottom: 10px;
+          margin-bottom: 14px;
+          font-family: "DM Mono", monospace;
+          font-size: 14px;
+          letter-spacing: 0.06em;
+          color: #1f2be0;
+        }
+        .f03-card-head .head-tag {
+          font-size: 12px;
+          color: #5560e5;
+        }
+        .f03-card-bar {
+          display: block;
+          height: 10px;
+          background: rgba(31, 43, 224, 0.18);
+          margin-bottom: 10px;
+          transform-origin: left center;
+        }
+        .f03-card-bar.b1 {
+          width: 86%;
+        }
+        .f03-card-bar.b2 {
+          width: 68%;
+        }
+        .f03-card-bar.b3 {
+          width: 78%;
+        }
+        .f03-card-foot {
+          margin-top: 12px;
+          border-top: 1px solid rgba(31, 43, 224, 0.18);
+          padding-top: 9px;
+          font-family: "DM Mono", monospace;
+          font-size: 13px;
+          letter-spacing: 0.08em;
+          color: #5560e5;
+        }
+
+        /* ---- tagline (ed-callout italic) ---- */
+        .f03-tagline {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 772px;
+          text-align: center;
+          font-family: "Newsreader", serif;
+          font-style: italic;
+          font-weight: 400;
+          font-size: 50px;
+          line-height: 1.1;
+          color: #1f2be0;
+        }
+        .f03-tagline .w {
+          display: inline-block;
+          margin: 0 0.12em;
+          will-change: transform, opacity;
+        }
+      </style>
+
+      <div
+        id="root"
+        data-composition-id="03-behind-the-mirror"
+        data-width="1920"
+        data-height="1080"
+        data-duration="13.215"
+      >
+        <!-- ground: paper + graph grid + hairlines -->
+        <div
+          id="f03-bg"
+          class="clip f03-ground"
+          data-start="0"
+          data-duration="13.215"
+          data-track-index="0"
+        >
+          <div class="f03-hairline f03-hairline-top"></div>
+          <div class="f03-hairline f03-hairline-bottom"></div>
+        </div>
+
+        <!-- stage -->
+        <div
+          id="f03-stage"
+          class="clip f03-stage-inner"
+          data-start="0"
+          data-duration="13.215"
+          data-track-index="1"
+        >
+          <svg class="f03-diagram" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="f03-sheen-grad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#1f2be0" stop-opacity="0.14" />
+                <stop offset="1" stop-color="#1f2be0" stop-opacity="0" />
+              </linearGradient>
+              <clipPath id="f03-reach-clip">
+                <rect id="f03-reach-clip-rect" x="1520" y="500" width="0" height="110" />
+              </clipPath>
+            </defs>
+
+            <!-- zone labels -->
+            <text id="f03-zone-private" class="zone" x="380" y="192" text-anchor="middle">PRIVATE</text>
+            <text id="f03-zone-market" class="zone" x="1560" y="192" text-anchor="middle">MARKET</text>
+            <text id="f03-mirror-label" class="m-tag-soft" x="1040" y="150" text-anchor="middle">THE MIRROR</text>
+
+            <!-- reasoning beam (under the plane) -->
+            <line id="f03-beam-glow" x1="832" y1="450" x2="1518" y2="450" stroke="rgba(31,43,224,0.18)" stroke-width="9" opacity="0" />
+            <path id="f03-beam" class="stroke-ink" style="stroke-width: 3.5" d="M 832 450 H 1518" />
+
+            <!-- dashed reach line, revealed right-to-left, halts at the plane -->
+            <g clip-path="url(#f03-reach-clip)">
+              <path
+                id="f03-reach"
+                d="M 1495 535 L 430 590"
+                stroke="#1f2be0"
+                stroke-width="3"
+                stroke-dasharray="12 10"
+                fill="none"
+              />
+            </g>
+            <g id="f03-cross">
+              <line x1="1032" y1="546" x2="1056" y2="570" stroke="#1f2be0" stroke-width="5" />
+              <line x1="1056" y1="546" x2="1032" y2="570" stroke="#1f2be0" stroke-width="5" />
+            </g>
+
+            <!-- asset glyphs (behind the plane) -->
+            <g id="f03-asset-doc">
+              <path class="stroke-ink" d="M 348 230 h 44 l 20 20 v 60 h -64 z" />
+              <path class="stroke-ink" style="stroke-width: 2" d="M 392 230 v 20 h 20" />
+              <line class="stroke-ink" style="stroke-width: 2" x1="360" y1="268" x2="398" y2="268" />
+              <line class="stroke-ink" style="stroke-width: 2" x1="360" y1="282" x2="398" y2="282" />
+              <line class="stroke-ink" style="stroke-width: 2" x1="360" y1="296" x2="386" y2="296" />
+              <text class="m-tag" x="380" y="338" text-anchor="middle">DOCUMENTS</text>
+            </g>
+            <g id="f03-asset-data">
+              <rect class="stroke-ink" x="348" y="412" width="64" height="20" />
+              <rect class="stroke-ink" x="348" y="438" width="64" height="20" />
+              <rect class="stroke-ink" x="348" y="464" width="64" height="20" />
+              <line class="stroke-ink" style="stroke-width: 2" x1="356" y1="422" x2="366" y2="422" />
+              <line class="stroke-ink" style="stroke-width: 2" x1="356" y1="448" x2="366" y2="448" />
+              <line class="stroke-ink" style="stroke-width: 2" x1="356" y1="474" x2="366" y2="474" />
+              <text class="m-tag" x="380" y="514" text-anchor="middle">DATA</text>
+            </g>
+            <g id="f03-asset-sys">
+              <rect class="stroke-ink" x="348" y="598" width="64" height="64" />
+              <path class="stroke-ink" style="stroke-width: 2.5" d="M 356 630 h 12 l 8 -14 l 10 28 l 8 -14 h 14" />
+              <text class="m-tag" x="380" y="694" text-anchor="middle">LIVE SYSTEMS</text>
+            </g>
+
+            <!-- ingest connectors: assets -> agent -->
+            <path id="f03-conn-1" class="stroke-faint" d="M 420 270 L 742 440" />
+            <path id="f03-conn-2" class="stroke-faint" d="M 420 450 L 742 450" />
+            <path id="f03-conn-3" class="stroke-faint" d="M 420 630 L 742 460" />
+
+            <!-- agent node (owns the assets; filled core) -->
+            <g id="f03-agent">
+              <rect class="stroke-ink" x="748" y="408" width="84" height="84" />
+              <rect x="778" y="438" width="24" height="24" fill="#1f2be0" />
+              <text class="m-tag" x="790" y="524" text-anchor="middle">AGENT</text>
+            </g>
+
+            <!-- buyer node (empty core; never holds the asset) -->
+            <g id="f03-buyer">
+              <rect class="stroke-ink" x="1518" y="408" width="84" height="84" />
+              <rect class="stroke-ink" style="stroke-width: 2" x="1548" y="438" width="24" height="24" />
+              <text class="m-tag" x="1560" y="524" text-anchor="middle">BUYER</text>
+            </g>
+
+            <!-- the mirror plane (focal) drawn OVER the beam -->
+            <rect id="f03-sheen" x="1044" y="170" width="110" height="560" fill="url(#f03-sheen-grad)" opacity="0" />
+            <path id="f03-plane-echo" class="stroke-faint" d="M 1054 182 V 718" />
+            <path id="f03-plane-line" d="M 1040 170 V 730" stroke="#1f2be0" stroke-width="5" fill="none" />
+            <rect id="f03-port" x="1032" y="442" width="16" height="16" fill="#1f2be0" />
+          </svg>
+
+          <!-- vertical catalogue rail -->
+          <div id="f03-rail" class="f03-rail">FIG. 03 &mdash; THE OWNERSHIP BOUNDARY</div>
+
+          <!-- reasoning card at the buyer's side -->
+          <div id="f03-card" class="f03-card">
+            <div class="f03-card-head">
+              <span>REASONING</span>
+              <span class="head-tag">OUTPUT</span>
+            </div>
+            <div class="f03-card-bar b1" id="f03-bar-1"></div>
+            <div class="f03-card-bar b2" id="f03-bar-2"></div>
+            <div class="f03-card-bar b3" id="f03-bar-3"></div>
+            <div class="f03-card-foot" id="f03-card-foot">ASSET &middot; NOT INCLUDED</div>
+          </div>
+
+          <!-- tagline, per-word -->
+          <div class="f03-tagline" id="f03-tagline">
+            <span class="w">The</span><span class="w">asset</span><span class="w">stays</span
+            ><span class="w">behind</span><span class="w">the</span><span class="w">mirror.</span>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <script>
+        window.__timelines = window.__timelines || {};
+
+        // --- svg-path-draw setup: measure each drawn stroke, hide via dashoffset ---
+        var drawIds = [
+          "f03-plane-line",
+          "f03-plane-echo",
+          "f03-beam",
+          "f03-conn-1",
+          "f03-conn-2",
+          "f03-conn-3",
+        ];
+        drawIds.forEach(function (id) {
+          var p = document.getElementById(id);
+          if (!p) return;
+          var len = p.getTotalLength();
+          p.style.strokeDasharray = String(len);
+          p.style.strokeDashoffset = String(len);
+        });
+
+        var tl = gsap.timeline({ paused: true });
+
+        /* =============== Scene 1 (0 - 3.91s) — the plane + the assets =============== */
+
+        // catalogue rail + PRIVATE zone label ease in under the opening clause
+        tl.fromTo("#f03-rail", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.3);
+        tl.fromTo("#f03-zone-private", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.55);
+
+        // mirror plane self-draws top -> bottom (svg-path-draw), sheen + echo follow
+        tl.to("#f03-plane-line", { strokeDashoffset: 0, duration: 1.2, ease: "power2.out" }, 0.15);
+        tl.to("#f03-plane-echo", { strokeDashoffset: 0, duration: 1.0, ease: "power2.out" }, 0.5);
+        tl.fromTo("#f03-sheen", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power1.out" }, 1.1);
+        tl.fromTo("#f03-mirror-label", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 1.35);
+
+        // three asset glyphs reveal sequentially on "documents, data, live systems"
+        tl.fromTo("#f03-asset-doc", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 2.45);
+        tl.fromTo("#f03-asset-data", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 2.95);
+        tl.fromTo("#f03-asset-sys", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 3.45);
+
+        // agent node seats beside them; ingest connectors draw in
+        tl.fromTo(
+          "#f03-agent",
+          { opacity: 0, scale: 0.85, transformOrigin: "50% 50%" },
+          { opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" },
+          3.6
+        );
+        tl.to("#f03-conn-1", { strokeDashoffset: 0, duration: 0.35, ease: "power2.out" }, 3.95);
+        tl.to("#f03-conn-2", { strokeDashoffset: 0, duration: 0.35, ease: "power2.out" }, 4.07);
+        tl.to("#f03-conn-3", { strokeDashoffset: 0, duration: 0.35, ease: "power2.out" }, 4.19);
+
+        /* =============== Scene 2 (3.91 - 7.63s) — buyers never touch =============== */
+
+        // buyer node enters right on "buyers"
+        tl.fromTo(
+          "#f03-buyer",
+          { opacity: 0, x: 70 },
+          { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" },
+          4.3
+        );
+        tl.fromTo("#f03-zone-market", { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 4.65);
+
+        // dashed reach-line draws toward the assets and HALTS dead at the plane
+        // (right edge fixed at 1520; x and width tween together on the same ease)
+        tl.to("#f03-reach-clip-rect", { attr: { x: 1044 }, duration: 1.05, ease: "expo.out" }, 5.3);
+        tl.to("#f03-reach-clip-rect", { attr: { width: 476 }, duration: 1.05, ease: "expo.out" }, 5.3);
+
+        // cross mark stamps at the contact point
+        tl.fromTo(
+          "#f03-cross",
+          { opacity: 0, scale: 1.6, transformOrigin: "50% 50%" },
+          { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out" },
+          6.4
+        );
+
+        /* =============== Scene 3 (7.63 - 10.95s) — the reasoning beam =============== */
+
+        // beam draws agent -> THROUGH the plane -> buyer
+        tl.to("#f03-beam", { strokeDashoffset: 0, duration: 1.1, ease: "power2.out" }, 7.75);
+        tl.fromTo("#f03-beam-glow", { opacity: 0 }, { opacity: 0.4, duration: 0.5, ease: "power1.out" }, 8.0);
+
+        // pass-through port lights on the plane as the beam crosses
+        tl.fromTo(
+          "#f03-port",
+          { opacity: 0, scale: 0.4, transformOrigin: "50% 50%" },
+          { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" },
+          8.1
+        );
+
+        // reasoning card scale-swaps in at the buyer's side (smooth settle, no overshoot)
+        tl.fromTo(
+          "#f03-card",
+          { opacity: 0, scale: 0.72, transformOrigin: "50% 50%" },
+          { opacity: 1, scale: 1, duration: 0.55, ease: "power3.out" },
+          9.15
+        );
+        // inner rows reveal after the container settles
+        tl.fromTo("#f03-bar-1", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 9.8);
+        tl.fromTo("#f03-bar-2", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 9.95);
+        tl.fromTo("#f03-bar-3", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 10.1);
+        tl.fromTo("#f03-card-foot", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 10.35);
+
+        /* =============== Scene 4 (10.95 - 12.715s) — the tagline, then still =============== */
+
+        var words = document.querySelectorAll("#f03-tagline .w");
+        words.forEach(function (w, i) {
+          tl.fromTo(
+            w,
+            { opacity: 0, y: 18 },
+            { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+            11.0 + i * 0.13
+          );
+        });
+        // held read to the end — deliberately still; the root transition owns the exit.
+
+        window.__timelines["03-behind-the-mirror"] = tl;
+      </script>
+    </template>
+  </body>
+</html>
