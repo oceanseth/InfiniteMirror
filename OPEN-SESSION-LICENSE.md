@@ -1,4 +1,4 @@
-# The Open Session License, v0.3 (draft)
+# The Open Session License, v0.4 (draft)
 
 *Seth Caldwell believes all open source projects that were collaborations with
 LLMs should include a complete, append-only history of the human and machine
@@ -34,7 +34,11 @@ repository, you agree to the following session-transparency conditions:
 3. **Keep the machine preface.** The first record of the history file must
    contain a `preface` instructing LLMs and automated agents **not to read
    the file** — its purpose is human curiosity and replication, not machine
-   context. Agents append; they do not load.
+   context. Agents append; they do not load. Appending requires no read: a
+   writer stamps a fresh `id` and `ts` (see Format) and appends — it never
+   needs to open the file, not even its last line. (This is why the monotonic
+   `n` of earlier versions was removed: a shared counter forced a read to
+   compute the next value and collided across branches.)
 
 4. **Propagate.** Include this license file, unmodified except for version
    updates, in any fork or derivative, so the requirement carries forward.
@@ -43,19 +47,48 @@ repository, you agree to the following session-transparency conditions:
    model id) and each human in the history file's session records, and the
    session date(s), to the extent known.
 
-## Format (open-session-jsonl v0.2)
+6. **Instruct the agents.** An adopting repository SHOULD include an
+   `AGENTS.md` at its root (and/or the harness-specific equivalent it loads,
+   e.g. `CLAUDE.md`) that directs AI agents to respect this license: append
+   each turn to `llm-turn-history.jsonl` as they work, never read or rewrite
+   it, and honor the append-only and clean-merge rules. The license states
+   the norm; `AGENTS.md` is where each repo turns it into an operative
+   instruction the agent actually loads at the start of a session.
+
+## Format (open-session-jsonl v0.3)
 
 One JSON object per line ([JSON Lines](https://jsonlines.org)):
 
 - **Header record** (first line): `{"format": "open-session-jsonl",
-  "version": "0.2", "preface": "...", "docs": "SOUL.md"}`
+  "version": "0.3", "preface": "...", "docs": "SOUL.md"}`
 - **Session records** (one at each session start): `{"session": "<ISO
   date>", "tool": "<harness>", "speakers": {"<abbrev>": {"kind":
   "human"|"model", "name": "...", "id": "<model id>"}}}` — speaker
   abbreviations are declared once and reused, compressing every message line.
-- **Message records:** `{"n": <int>, "m": "<speaker abbrev>", "t": "<turn
-  text, verbatim>"}` plus optional `"x"` (summary of tool activity, on model
-  turns) and `"ts"` (ISO date). `n` increases monotonically across sessions.
+- **Message records:** `{"id": "<ULID>", "m": "<speaker abbrev>", "t": "<turn
+  text, verbatim>", "ts": "<ISO-8601 UTC>"}` plus optional `"x"` (summary of
+  tool activity, on model turns). `id` is a globally-unique, time-sortable
+  record id — a [ULID](https://github.com/ulid/spec) by convention, whose
+  leading timestamp makes a plain lexicographic sort chronological and whose
+  entropy keeps it unique across contributors writing at the same instant.
+  `ts` is the human-readable ISO-8601 UTC timestamp (millisecond precision,
+  fixed width, so string sort equals time sort). **Records are ordered by
+  `(ts, id)` at read time, never by position in the file** — so appends from
+  parallel branches merge without reordering. The monotonic `n` of v0.2 is
+  removed (it required a shared counter, forced a read to compute, and
+  collided on merge); readers MAY still accept `n` on legacy v0.2 archives.
+
+- **Clean concurrent merges.** The file is append-only and several
+  contributors may push in parallel, so an adopting repo SHOULD enable git's
+  union merge for it — add `llm-turn-history.jsonl merge=union` to
+  `.gitattributes` (committed once, then applied automatically for everyone).
+  Union merge concatenates both sides' appended lines instead of raising a
+  conflict; per-record `id` uniqueness makes that safe, and readers dedupe by
+  `id`. Correct order is recovered by the `(ts, id)` sort above, so the file's
+  physical line order need not be meaningful. Where even that is undesirable,
+  a repo MAY instead shard the log into per-contributor/per-session files
+  (`sessions/<who>-<ulid>.jsonl`) merged at read time — distinct files never
+  conflict.
 
 - **Identity records** (v0.3, for humans — including "multiplayer" sessions
   with several humans): every human speaker SHOULD be keyed to a public
@@ -89,9 +122,10 @@ One JSON object per line ([JSON Lines](https://jsonlines.org)):
 
 The schema maps one-to-one onto the de-facto chat JSONL standard
 (`role`/`content` as used in fine-tuning datasets): `kind: human → role:
-user`, `kind: model → role: assistant`, `t → content`. Converting is a
-one-liner; keeping that mapping intact is a condition of this license, so
-archives remain machine-consumable by standard tooling.
+user`, `kind: model → role: assistant`, `t → content` (`id` and `ts` are
+record metadata the mapping ignores). Converting is a one-liner; keeping that
+mapping intact is a condition of this license, so archives remain
+machine-consumable by standard tooling.
 
 ## Related: the Closed Session License (planned)
 
@@ -119,5 +153,8 @@ convertible to open-session by relicensing.
   share-alike licensing.
 - v0.1 (2026-07-11) used a plain-text format; v0.2 (same day) switched to
   JSONL with speaker-abbreviation compression; v0.3 (same day) added
-  verifiable identity records for human speakers. Drafted within the session
-  it archives — see the history file itself.
+  verifiable identity records for human speakers; v0.4 (2026-07-17) dropped
+  the monotonic `n` for a time-sortable `id` (ULID) plus a required `ts`,
+  ordered records by `(ts, id)`, and adopted `merge=union` for clean parallel
+  appends — bumping the wire format to open-session-jsonl v0.3. Drafted within
+  the session it archives — see the history file itself.
